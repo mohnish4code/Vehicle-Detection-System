@@ -1,6 +1,3 @@
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
 import streamlit as st
 import cv2
 import numpy as np

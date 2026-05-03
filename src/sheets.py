@@ -11,12 +11,15 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-# Load credentials
-creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
-creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
-client = gspread.authorize(creds)
+if "GOOGLE_CREDENTIALS" in os.environ:
+    # STREAMLIT CLOUD
+    creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+else:
+    # LOCALHOST
+    creds = ServiceAccountCredentials.from_json_keyfile_name("src/credentials.json", scope)
 
-# Open your sheet (IMPORTANT: name must match exactly)
+client = gspread.authorize(creds)
 sheet = client.open("Vehicle_Tracking_System").sheet1
 
 
@@ -29,4 +32,3 @@ def save_to_sheets(plate, image_name):
         timestamp,
         image_name
     ])
-    
