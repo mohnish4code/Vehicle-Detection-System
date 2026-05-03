@@ -1,9 +1,11 @@
-ultralytics
-numpy
 matplotlib
-easyocr
 streamlit
+ultralytics
+easyocr
+numpy
+opencv-python-headless
 gspread
 oauth2client
-opencv-python-headless
 pytz
+
+opencv-python==0.0.0  ❗ IMPORTANT
