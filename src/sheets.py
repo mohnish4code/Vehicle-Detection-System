@@ -3,6 +3,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 import json
 import os
+import pytz
 
 # Setup scope
 scope = [
@@ -20,10 +21,12 @@ sheet = client.open("Vehicle_Tracking_System").sheet1
 
 
 def save_to_sheets(plate, image_name):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ist = pytz.timezone('Asia/Kolkata')
+    timestamp = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
 
     sheet.append_row([
         plate,
         timestamp,
         image_name
     ])
+    
