@@ -1,7 +1,7 @@
 streamlit
 ultralytics
 easyocr==1.7.2
-numpy
+numpy==1.26.4
 gspread
 oauth2client
 pytz
