@@ -1,3 +1,9 @@
+import os
+
+# 🔥 IMPORTANT FIXES FOR STREAMLIT CLOUD
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
+
 import streamlit as st
 import cv2
 import numpy as np
@@ -8,8 +14,17 @@ from sheets import save_to_sheets
 
 
 # -------------------- LOAD MODEL --------------------
-model = YOLO("models/best.pt")
-reader = easyocr.Reader(['en'])
+@st.cache_resource
+def load_model():
+    return YOLO("models/best.pt")
+
+@st.cache_resource
+def load_ocr():
+    return easyocr.Reader(['en'])
+
+model = load_model()
+reader = load_ocr()
+
 
 # -------------------- PREPROCESS --------------------
 def preprocess_variants(crop):
@@ -17,19 +32,23 @@ def preprocess_variants(crop):
 
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
 
+    # resize
     v1 = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     variants.append(v1)
 
+    # histogram equalization
     v2 = cv2.equalizeHist(gray)
     v2 = cv2.resize(v2, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     variants.append(v2)
 
+    # adaptive threshold
     v3 = cv2.adaptiveThreshold(gray, 255,
                                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                cv2.THRESH_BINARY, 11, 2)
     v3 = cv2.resize(v3, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
     variants.append(v3)
 
+    # blur + threshold
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
     _, v4 = cv2.threshold(blur, 120, 255, cv2.THRESH_BINARY)
     v4 = cv2.resize(v4, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
@@ -50,6 +69,7 @@ def extract_text(variants):
             text = text.upper()
             text = re.sub(r'[^A-Z0-9]', '', text)
 
+            # ignore IND
             if text == "IND":
                 continue
 
@@ -75,9 +95,7 @@ def smart_correct(text):
 
 # -------------------- VALIDATION --------------------
 def is_valid_plate(text):
-    if len(text) < 6:
-        return False
-    if len(text) > 12:
+    if len(text) < 6 or len(text) > 12:
         return False
     if not any(c.isalpha() for c in text):
         return False
@@ -89,7 +107,6 @@ def is_valid_plate(text):
 # -------------------- DETECTION --------------------
 def detect_plate(image):
     results = model(image, conf=0.25)[0]
-
     plates = []
 
     for box in results.boxes.xyxy:
@@ -97,6 +114,7 @@ def detect_plate(image):
 
         h, w, _ = image.shape
 
+        # padding
         pad = 25
         x1 = max(0, x1 - pad)
         y1 = max(0, y1 - pad)
@@ -120,7 +138,7 @@ def detect_plate(image):
     return plates
 
 
-# -------------------- STREAMLIT UI --------------------
+# -------------------- UI --------------------
 st.title("🚗 License Plate Detection System")
 
 option = st.radio("Choose input method:", ["Upload Image", "Use Camera"])

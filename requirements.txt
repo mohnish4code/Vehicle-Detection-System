@@ -1,7 +1,6 @@
 streamlit
-matplotlib
 ultralytics
-easyocr
+easyocr==1.7.2
 numpy
 opencv-python-headless
 gspread
