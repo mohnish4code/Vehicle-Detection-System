@@ -1,8 +1,5 @@
 import os
-
-# 🔥 IMPORTANT FIXES FOR STREAMLIT CLOUD
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 import streamlit as st
 import cv2

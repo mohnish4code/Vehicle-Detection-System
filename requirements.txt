@@ -2,7 +2,6 @@ streamlit
 ultralytics
 easyocr==1.7.2
 numpy
-opencv-python-headless
 gspread
 oauth2client
 pytz
