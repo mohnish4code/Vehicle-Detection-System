@@ -6,6 +6,7 @@ import easyocr
 import re
 from sheets import save_to_sheets
 
+
 # -------------------- LOAD MODEL --------------------
 model = YOLO("models/best.pt")
 reader = easyocr.Reader(['en'])
