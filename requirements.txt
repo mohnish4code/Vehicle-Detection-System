@@ -1,11 +1,9 @@
-matplotlib
 streamlit
+matplotlib
 ultralytics
-easyocr
+easyocr==1.6.2
 numpy
-opencv-python-headless
+opencv-python-headless==4.8.0.76
 gspread
 oauth2client
 pytz
-
-opencv-python==0.0.0  ❗ IMPORTANT
