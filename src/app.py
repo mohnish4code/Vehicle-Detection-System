@@ -133,7 +133,7 @@ def detect_plate(image):
 
 
 # -------------------- UI --------------------
-st.title("🚗 License Plate Detection System")
+st.title("🚗 Car Number Plate Detection System")
 
 option = st.radio("Choose input method:", ["Upload Image", "Use Camera"])
 
