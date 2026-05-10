@@ -1,4 +1,4 @@
-# 🚗 License Plate Detection & Vehicle Tracking System
+# 🚗 Car Number Plate Detection & Vehicle Tracking System
 
 A real-time AI-powered vehicle tracking system that detects license plates from images using deep learning and logs vehicle entry data into Google Sheets via a web interface.
 
