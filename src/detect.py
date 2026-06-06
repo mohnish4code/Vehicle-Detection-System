@@ -111,7 +111,7 @@ def detect_plate(image_path):
 
         h, w, _ = img.shape
 
-        # 🔥 IMPORTANT: more padding improves OCR
+        # IMPORTANT: more padding improves OCR
         pad = 25
         x1 = max(0, x1 - pad)
         y1 = max(0, y1 - pad)
