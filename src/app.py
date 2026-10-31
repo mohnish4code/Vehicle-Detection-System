@@ -9,8 +9,9 @@ import numpy as np
 import streamlit as st
 
 from src.config import setup_logging
+from src.errors import AppError
 from src.pipeline import PlatePipeline
-from src.sheets import save_to_sheets
+from src.sheets import SheetsLog
 
 setup_logging()
 
@@ -20,7 +21,13 @@ def load_pipeline():
     return PlatePipeline().load()
 
 
+@st.cache_resource
+def load_sheets():
+    return SheetsLog()
+
+
 pipeline = load_pipeline()
+sheets = load_sheets()
 
 st.title("Car Number Plate Detection System")
 
@@ -48,5 +55,9 @@ if upload is not None:
             st.success(f"Detected Plate: {p.text}")
             # Only save on click; saving inline ran again on every rerun
             if st.button(f"Save {p.text}", key=f"save_{i}_{p.text}"):
-                save_to_sheets(p.text, "streamlit_capture")
-                st.toast(f"Saved {p.text}")
+                try:
+                    sheets.add(p.text, "camera" if option == "Use Camera" else "upload",
+                               p.det_conf, p.ocr_conf, p.format)
+                    st.toast(f"Saved {p.text}")
+                except AppError as e:
+                    st.warning(e.message)

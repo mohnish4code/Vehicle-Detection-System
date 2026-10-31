@@ -17,9 +17,22 @@ upscale = 2
 # are marked "needs review" even if the format is valid
 min_confidence = 0.5
 max_fixes = 2
+# Skip the remaining preprocessing variants once a read is valid, needs no
+# fixes and is at least this confident. Set to 1.1 to always run all of them.
+early_stop_confidence = 0.9
 # Text OCR picks up on plates that isn't part of the number
 ignore_words = ["IND", "INDIA"]
 
 [sheets]
-spreadsheet_name = "Vehicle_Tracking_System"
+# The long ID in the sheet URL: docs.google.com/spreadsheets/d/<this part>/edit
+spreadsheet_id = ""
+# Leave empty to use the first tab
+worksheet = ""
+# Service account key. GOOGLE_CREDENTIALS / GOOGLE_APPLICATION_CREDENTIALS env vars win over this.
 credentials_file = "src/credentials.json"
+# Refuse to log the same plate again within this many minutes
+dedupe_minutes = 10
+retries = 3
+retry_base_seconds = 1.0
+# Rows are cached this long between reads to stay under the API quota
+cache_seconds = 15

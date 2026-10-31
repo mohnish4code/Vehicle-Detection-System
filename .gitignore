@@ -67,3 +67,5 @@ service-account*.json
 # ----------------------------
 *.tmp
 *.temp
+# pytest
+.pytest_cache/

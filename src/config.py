@@ -27,13 +27,19 @@ class OcrSettings:
     upscale: int = 2
     min_confidence: float = 0.5
     max_fixes: int = 2
+    early_stop_confidence: float = 0.9
     ignore_words: list[str] = field(default_factory=lambda: ["IND", "INDIA"])
 
 
 @dataclass
 class SheetsSettings:
-    spreadsheet_name: str = "Vehicle_Tracking_System"
+    spreadsheet_id: str = ""
+    worksheet: str = ""
     credentials_file: str = "src/credentials.json"
+    dedupe_minutes: int = 10
+    retries: int = 3
+    retry_base_seconds: float = 1.0
+    cache_seconds: int = 15
 
 
 @dataclass
