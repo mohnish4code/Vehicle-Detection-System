@@ -1,0 +1,15 @@
+.git
+.devcontainer
+venv
+data
+frontend
+tests
+test_images
+secrets
+**/__pycache__
+**/*.pyc
+.pytest_cache
+**/*credentials*.json
+**/service-account*.json
+.env
+.env.*

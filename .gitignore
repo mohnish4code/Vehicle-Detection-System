@@ -69,3 +69,6 @@ service-account*.json
 *.temp
 # pytest
 .pytest_cache/
+
+# Docker secrets (service account key for docker compose)
+secrets/
