@@ -46,6 +46,11 @@ data/
 # ----------------------------
 credentials.json
 src/credentials.json
+*credentials*.json
+service-account*.json
+.env
+.env.*
+!.env.example
 
 # ----------------------------
 # Streamlit cache
