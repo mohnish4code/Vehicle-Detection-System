@@ -1,6 +1,7 @@
 """Plate detection + OCR pipeline shared by the CLI and the web app."""
 
 import logging
+import threading
 import time
 from dataclasses import dataclass, field
 from statistics import median
@@ -132,6 +133,9 @@ class PlatePipeline:
         self.settings = settings or get_settings()
         self.model = None
         self.reader = None
+        self.error: str | None = None
+        # YOLO and EasyOCR aren't safe to call from several threads at once
+        self._lock = threading.Lock()
 
     def load(self):
         """Load YOLO and EasyOCR. Slow, so do it once and reuse the pipeline."""
@@ -158,9 +162,12 @@ class PlatePipeline:
         for variant in preprocess_variants(crop, ocr.upscale):
             rows = group_rows(self.reader.readtext(variant, allowlist=PLATE_CHARS), ocr.ignore_words)
             read = best_read(rows)
-            if read:
-                log.debug("OCR variant read %r -> %r (conf %.2f)", read.raw, read.text, read.confidence)
-                reads.append(read)
+            if not read:
+                continue
+            log.debug("OCR variant read %r -> %r (conf %.2f)", read.raw, read.text, read.confidence)
+            reads.append(read)
+            if read.valid and read.fixes == 0 and read.confidence >= ocr.early_stop_confidence:
+                break
 
         if not reads:
             return OcrRead("", 0.0)
@@ -170,6 +177,10 @@ class PlatePipeline:
         if not self.loaded:
             raise RuntimeError("Pipeline not loaded, call load() first")
 
+        with self._lock:
+            return self._detect(image)
+
+    def _detect(self, image: np.ndarray) -> list[PlateResult]:
         cfg = self.settings
         h, w = image.shape[:2]
 
