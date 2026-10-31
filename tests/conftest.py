@@ -77,8 +77,10 @@ def make_plate(text="MH12DE1433", valid=True, needs_review=False, fmt="standard"
     )
 
 
-def image_bytes(ext=".jpg") -> bytes:
-    ok, buf = cv2.imencode(ext, np.zeros((120, 200, 3), np.uint8))
+def image_bytes(ext=".jpg", size=(120, 200), noise=False) -> bytes:
+    shape = (*size, 3)
+    img = np.random.default_rng(0).integers(0, 255, shape, np.uint8) if noise else np.zeros(shape, np.uint8)
+    ok, buf = cv2.imencode(ext, img)
     assert ok
     return buf.tobytes()
 

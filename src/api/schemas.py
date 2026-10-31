@@ -6,7 +6,16 @@ from ..plates import normalize
 
 PlateFormat = Literal["standard", "bh"]
 Source = Literal["upload", "camera"]
-ImageStatus = Literal["ok", "no_plate", "unreadable", "invalid_format", "bad_image"]
+ImageStatus = Literal[
+    "ok",               # at least one plate with valid text
+    "no_plate",         # model found nothing
+    "unreadable",       # plate found, OCR got no text
+    "invalid_format",   # plate found, text isn't a valid plate
+    "bad_image",        # empty, corrupt or tiny file
+    "unsupported_type",
+    "too_large",
+    "error",            # unexpected failure on this image, details are in the server log
+]
 
 
 class Box(BaseModel):

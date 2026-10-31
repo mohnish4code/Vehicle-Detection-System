@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Query, Request, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from ..config import Settings, get_settings, setup_logging
 from ..errors import AppError
@@ -18,7 +19,8 @@ from ..pipeline import PlatePipeline, PlateResult
 from ..plates import plate_format
 from ..sheets import SheetsLog
 from . import schemas
-from .errors import install_error_handlers
+from .errors import error_response, install_error_handlers
+from .uploads import RejectedUpload, decode_image, read_limited
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ MESSAGES = {
     "no_plate": "No number plate found. Make sure the plate is clearly visible in the photo.",
     "unreadable": "Plate found but text unclear - try a closer, sharper photo.",
     "invalid_format": "Plate found but the text doesn't match an Indian plate format. Check it before saving.",
-    "bad_image": "This file couldn't be opened as an image.",
+    "error": "Something went wrong reading this image. Try again or use a different photo.",
 }
 
 
@@ -61,6 +63,34 @@ def create_app(settings: Settings | None = None, pipeline: PlatePipeline | None 
     app = FastAPI(title="Vehicle Plate Detection API", version="2.0.0", lifespan=lifespan)
     install_error_handlers(app)
 
+    api = settings.api
+    max_file_bytes = int(api.max_file_mb * 1024 * 1024)
+    # Whole request: every file at the limit plus some room for the multipart overhead
+    max_body = api.max_files * max_file_bytes + 1024 * 1024
+
+    @app.middleware("http")
+    async def guard(request: Request, call_next):
+        length = request.headers.get("content-length")
+        if length and length.isdigit() and int(length) > max_body:
+            return error_response(413, "PAYLOAD_TOO_LARGE",
+                                  f"Upload is too big. Send at most {api.max_files} images "
+                                  f"of up to {api.max_file_mb:g} MB each.")
+        try:
+            return await call_next(request)
+        except Exception:
+            # Handled here rather than only in the global handler so the 500
+            # still passes through CORS and the browser can read it
+            log.exception("Unhandled error on %s %s", request.method, request.url.path)
+            return error_response(500, "INTERNAL_ERROR", "Something went wrong on the server. Please try again.")
+
+    # Added last so it wraps everything, including the size check's responses
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=api.cors_origins,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
+
     @app.get("/api/health", response_model=schemas.Health)
     def health(request: Request):
         pipe: PlatePipeline = request.app.state.pipeline
@@ -77,9 +107,12 @@ def create_app(settings: Settings | None = None, pipeline: PlatePipeline | None 
         pipe: PlatePipeline = request.app.state.pipeline
         if not pipe.loaded:
             raise ModelUnavailable(pipe.error or "The detection model isn't loaded.")
+        if len(files) > api.max_files:
+            raise AppError(f"Too many images ({len(files)}). Upload at most {api.max_files} at a time.",
+                           code="TOO_MANY_FILES", status=400)
 
         start = time.perf_counter()
-        results = [process_image(pipe, f) for f in files]
+        results = [process_image(pipe, f, settings, max_file_bytes) for f in files]
         return schemas.DetectResponse(results=results, total_ms=_ms_since(start))
 
     @app.post("/api/logs", response_model=schemas.LogEntry, status_code=status.HTTP_201_CREATED)
@@ -103,18 +136,28 @@ def create_app(settings: Settings | None = None, pipeline: PlatePipeline | None 
     return app
 
 
-def process_image(pipe: PlatePipeline, upload: UploadFile) -> schemas.ImageResult:
+def process_image(pipe: PlatePipeline, upload: UploadFile, settings: Settings,
+                  max_bytes: int) -> schemas.ImageResult:
     start = time.perf_counter()
     name = upload.filename or "image"
 
-    data = upload.file.read()
-    image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR) if data else None
-    if image is None:
-        log.info("%s: could not decode image", name)
-        return schemas.ImageResult(filename=name, status="bad_image", message=MESSAGES["bad_image"],
+    def failed(image_status, message):
+        return schemas.ImageResult(filename=name, status=image_status, message=message,
                                    processing_ms=_ms_since(start))
 
-    plates = pipe.detect(image)
+    try:
+        image = decode_image(read_limited(upload, max_bytes), settings)
+    except RejectedUpload as e:
+        log.info("%s rejected: %s", name, e.message)
+        return failed(e.status, e.message)
+
+    try:
+        plates = pipe.detect(image)
+    except Exception:
+        # One bad image shouldn't take down the whole batch
+        log.exception("Detection failed on %s", name)
+        return failed("error", MESSAGES["error"])
+
     h, w = image.shape[:2]
 
     if not plates:

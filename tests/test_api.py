@@ -88,16 +88,72 @@ def test_detect_multiple_images_with_mixed_results(settings, sheets):
     assert res.json()["total_ms"] >= 0
 
 
-def test_detect_bad_image_does_not_fail_batch(client):
-    files = [("files", ("broken.jpg", b"not really a jpeg", "image/jpeg"))] + upload("car.jpg")
+def test_detect_bad_files_do_not_fail_batch(client):
+    files = [
+        ("files", ("broken.jpg", image_bytes()[:60], "image/jpeg")),       # truncated jpeg
+        ("files", ("notes.jpg", b"definitely not an image", "image/jpeg")),
+        ("files", ("empty.png", b"", "image/png")),
+        ("files", ("anim.gif", b"GIF89a" + b"\0" * 50, "image/gif")),
+        ("files", ("IMG_0001.HEIC", b"\0\0\0\x18ftypheic" + b"\0" * 50, "image/heic")),
+        ("files", ("tiny.png", image_bytes(".png", (20, 20)), "image/png")),
+    ] + upload("car.jpg")
     res = client.post("/api/detect", files=files)
     assert res.status_code == 200
-    statuses = [r["status"] for r in res.json()["results"]]
-    assert statuses == ["bad_image", "ok"]
+
+    results = {r["filename"]: r for r in res.json()["results"]}
+    assert results["broken.jpg"]["status"] == "bad_image"
+    assert "damaged" in results["broken.jpg"]["message"]
+    assert results["notes.jpg"]["status"] == "unsupported_type"
+    assert results["empty.png"]["message"] == "The file is empty."
+    assert results["anim.gif"]["status"] == "unsupported_type"
+    assert "HEIC" in results["IMG_0001.HEIC"]["message"]
+    assert "too small" in results["tiny.png"]["message"]
+    assert results["car.jpg"]["status"] == "ok"
+
+
+def test_detect_type_comes_from_content_not_name(client):
+    # a PNG named .jpg and sent as octet-stream is still fine
+    files = [("files", ("photo.jpg", image_bytes(".png"), "application/octet-stream"))]
+    assert client.post("/api/detect", files=files).json()["results"][0]["status"] == "ok"
+
+
+def test_detect_file_too_large(settings, pipeline, sheets):
+    settings.api.max_file_mb = 0.0005  # ~500 bytes
+    with TestClient(create_app(settings, pipeline, sheets)) as c:
+        files = [("files", ("big.png", image_bytes(".png", (300, 300), noise=True), "image/png"))]
+        result = c.post("/api/detect", files=files).json()["results"][0]
+    assert result["status"] == "too_large"
+    assert "MB" in result["message"]
+
+
+def test_detect_too_many_pixels(settings, pipeline, sheets):
+    settings.api.max_image_megapixels = 0.01
+    with TestClient(create_app(settings, pipeline, sheets)) as c:
+        result = c.post("/api/detect", files=upload("car.jpg")).json()["results"][0]
+    assert result["status"] == "too_large"
+    assert "200x120" in result["message"]
+
+
+def test_detect_too_many_files(settings, pipeline, sheets):
+    settings.api.max_files = 2
+    with TestClient(create_app(settings, pipeline, sheets)) as c:
+        err = assert_error(c.post("/api/detect", files=upload("a.jpg", "b.jpg", "c.jpg")), 400, "TOO_MANY_FILES")
+    assert "at most 2" in err["message"]
+    assert pipeline.calls == 0
+
+
+def test_request_body_too_large(settings, pipeline, sheets):
+    settings.api.max_files = 1
+    settings.api.max_file_mb = 0.01
+    with TestClient(create_app(settings, pipeline, sheets)) as c:
+        files = [("files", ("huge.jpg", b"\xff\xd8\xff" + b"\0" * 2_000_000, "image/jpeg"))]
+        assert_error(c.post("/api/detect", files=files), 413, "PAYLOAD_TOO_LARGE")
+    assert pipeline.calls == 0
 
 
 def test_detect_without_files(client):
-    assert_error(client.post("/api/detect"), 422, "VALIDATION_ERROR")
+    err = assert_error(client.post("/api/detect"), 422, "VALIDATION_ERROR")
+    assert err["details"][0]["field"] == "files"
 
 
 def test_detect_when_model_missing(settings, sheets):
@@ -107,12 +163,51 @@ def test_detect_when_model_missing(settings, sheets):
     assert "best.pt" in err["message"]
 
 
-def test_unexpected_error_hides_details(settings, sheets):
-    pipe = FakePipeline([RuntimeError("secret internal detail")])
-    with TestClient(create_app(settings, pipe, sheets), raise_server_exceptions=False) as c:
-        res = c.post("/api/detect", files=upload("car.jpg"))
+def test_detection_crash_only_fails_that_image(settings, sheets):
+    pipe = FakePipeline([RuntimeError("secret internal detail"), [make_plate()]])
+    with TestClient(create_app(settings, pipe, sheets)) as c:
+        res = c.post("/api/detect", files=upload("a.jpg", "b.jpg"))
+    assert res.status_code == 200
+    assert [r["status"] for r in res.json()["results"]] == ["error", "ok"]
+    assert "secret" not in res.text and "Traceback" not in res.text
+
+
+def test_unexpected_error_hides_details(client, sheets, monkeypatch):
+    def boom(**kwargs):
+        raise RuntimeError("secret internal detail")
+
+    monkeypatch.setattr(sheets, "recent", boom)
+    res = client.get("/api/logs", headers={"Origin": "http://localhost:5173"})
     assert_error(res, 500, "INTERNAL_ERROR")
     assert "secret" not in res.text
+    # still readable by the frontend
+    assert res.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+# -- CORS --
+
+def test_cors_allows_frontend(client):
+    res = client.options("/api/detect", headers={
+        "Origin": "http://localhost:5173", "Access-Control-Request-Method": "POST"})
+    assert res.status_code == 200
+    assert res.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert client.get("/api/health", headers={"Origin": "http://localhost:5173"}) \
+        .headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+def test_cors_blocks_other_origins(client):
+    res = client.options("/api/detect", headers={
+        "Origin": "https://evil.example.com", "Access-Control-Request-Method": "POST"})
+    assert res.status_code == 400
+    assert "access-control-allow-origin" not in res.headers
+    res = client.get("/api/health", headers={"Origin": "https://evil.example.com"})
+    assert "access-control-allow-origin" not in res.headers
+
+
+def test_cors_rejects_disallowed_method(client):
+    res = client.options("/api/logs", headers={
+        "Origin": "http://localhost:5173", "Access-Control-Request-Method": "DELETE"})
+    assert res.status_code == 400
 
 
 # -- logs --

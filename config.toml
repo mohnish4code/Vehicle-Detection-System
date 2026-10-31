@@ -23,6 +23,14 @@ early_stop_confidence = 0.9
 # Text OCR picks up on plates that isn't part of the number
 ignore_words = ["IND", "INDIA"]
 
+[api]
+# Frontend URLs allowed to call the API from the browser
+cors_origins = ["http://localhost:5173"]
+max_files = 10
+max_file_mb = 10
+# Rejects absurdly large images (e.g. 10000x10000) before running the model
+max_image_megapixels = 40
+
 [sheets]
 # The long ID in the sheet URL: docs.google.com/spreadsheets/d/<this part>/edit
 spreadsheet_id = ""

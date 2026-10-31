@@ -32,6 +32,14 @@ class OcrSettings:
 
 
 @dataclass
+class ApiSettings:
+    cors_origins: list[str] = field(default_factory=lambda: ["http://localhost:5173"])
+    max_files: int = 10
+    max_file_mb: float = 10
+    max_image_megapixels: float = 40
+
+
+@dataclass
 class SheetsSettings:
     spreadsheet_id: str = ""
     worksheet: str = ""
@@ -46,6 +54,7 @@ class SheetsSettings:
 class Settings:
     model: ModelSettings = field(default_factory=ModelSettings)
     ocr: OcrSettings = field(default_factory=OcrSettings)
+    api: ApiSettings = field(default_factory=ApiSettings)
     sheets: SheetsSettings = field(default_factory=SheetsSettings)
 
     def path(self, value: str) -> Path:
