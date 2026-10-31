@@ -1,11 +1,6 @@
-.git
-.devcontainer
-venv
-data
-frontend
 tests
 test_images
-secrets
+scripts
 **/__pycache__
 **/*.pyc
 .pytest_cache

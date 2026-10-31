@@ -3,9 +3,9 @@ import gspread
 import numpy as np
 import pytest
 
-from src.config import Settings
-from src.pipeline import PlateResult
-from src.sheets import SheetsLog
+from app.config import Settings
+from app.pipeline import PlateResult
+from app.sheets import SheetsLog
 
 
 class FakeResponse:
@@ -86,12 +86,22 @@ def image_bytes(ext=".jpg", size=(120, 200), noise=False) -> bytes:
 
 
 @pytest.fixture
-def settings():
+def settings(tmp_path, monkeypatch):
+    # Never pick up a real key from secrets/ or the environment in tests
+    monkeypatch.delenv("GOOGLE_CREDENTIALS", raising=False)
+    monkeypatch.delenv("GOOGLE_APPLICATION_CREDENTIALS", raising=False)
     s = Settings()
     s.sheets.spreadsheet_id = "test-sheet"
+    s.sheets.credentials_file = str(tmp_path / "missing-key.json")
     s.sheets.retry_base_seconds = 0
     s.sheets.cache_seconds = 0
     return s
+
+
+def not_configured(settings):
+    settings.sheets.spreadsheet_id = ""
+    settings.sheets.spreadsheet_name = ""
+    return settings
 
 
 @pytest.fixture

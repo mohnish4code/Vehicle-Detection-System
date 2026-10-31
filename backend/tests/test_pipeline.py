@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.config import Settings
-from src.pipeline import PlatePipeline
+from app.config import Settings
+from app.pipeline import PlatePipeline
 
 
 class FakeReader:

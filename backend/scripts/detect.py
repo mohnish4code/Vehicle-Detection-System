@@ -1,7 +1,9 @@
 """Run plate detection on a folder of images from the command line.
 
-    python -m src.detect                 # uses test_images/
-    python -m src.detect path/to/images  # or a folder / single file
+Run from backend/:
+
+    python -m scripts.detect                 # uses test_images/
+    python -m scripts.detect path/to/images  # or a folder / single file
 """
 
 import argparse
@@ -10,8 +12,8 @@ from pathlib import Path
 
 import cv2
 
-from .config import ROOT, setup_logging
-from .pipeline import PlatePipeline
+from app.config import ROOT, setup_logging
+from app.pipeline import PlatePipeline
 
 log = logging.getLogger("detect")
 

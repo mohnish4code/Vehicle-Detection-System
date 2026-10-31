@@ -1,6 +1,6 @@
 import pytest
 
-from src.plates import BH, STANDARD, correct_plate, is_valid_plate, plate_format
+from app.plates import BH, STANDARD, correct_plate, is_valid_plate, plate_format
 
 
 @pytest.mark.parametrize("plate, fmt", [
@@ -70,7 +70,7 @@ def test_bh_format_detected():
 
 def test_two_row_plate_joined():
     # bike / auto plates: state + RTO on top, series + number below
-    from src.pipeline import best_read, group_rows
+    from app.pipeline import best_read, group_rows
 
     ocr = [
         ([[10, 60], [120, 60], [120, 100], [10, 100]], "DE1433", 0.88),
@@ -85,7 +85,7 @@ def test_two_row_plate_joined():
 
 
 def test_two_row_plate_with_ocr_mistake_and_ind():
-    from src.pipeline import best_read, group_rows
+    from app.pipeline import best_read, group_rows
 
     ocr = [
         ([[0, 20], [20, 20], [20, 40], [0, 40]], "IND", 0.99),
@@ -98,7 +98,7 @@ def test_two_row_plate_with_ocr_mistake_and_ind():
 
 
 def test_stray_text_does_not_spoil_plate():
-    from src.pipeline import best_read, group_rows
+    from app.pipeline import best_read, group_rows
 
     ocr = [
         ([[10, 10], [200, 10], [200, 40], [10, 40]], "MH12DE1433", 0.9),
@@ -108,7 +108,7 @@ def test_stray_text_does_not_spoil_plate():
 
 
 def test_unreadable_returns_best_raw_text():
-    from src.pipeline import best_read, group_rows
+    from app.pipeline import best_read, group_rows
 
     read = best_read(group_rows([([[0, 0], [50, 0], [50, 20], [0, 20]], "XQ7", 0.4)]))
     assert read.text == "XQ7"

@@ -3,9 +3,11 @@ from datetime import datetime, timedelta
 import pytest
 import requests
 
-from src.sheets import HEADER, IST, TIME_FORMAT, DuplicatePlate, SheetsError, SheetsLog
+import app.sheets as sheets_module
+from app.sheets import (DRIVE_LOOKUP_SCOPE, HEADER, IST, SHEETS_SCOPE, TIME_FORMAT, DuplicatePlate, SheetsError,
+                        SheetsLog, scopes_for)
 
-from .conftest import FakeWorksheet, api_error
+from .conftest import FakeWorksheet, api_error, not_configured
 
 
 def ago(minutes):
@@ -122,11 +124,58 @@ def test_missing_credentials_reported_not_raised(settings, tmp_path, monkeypatch
     assert "service account key" in status["error"]
 
 
-def test_missing_spreadsheet_id(settings):
-    settings.sheets.spreadsheet_id = ""
-    status = SheetsLog(settings).status()
+def test_no_sheet_configured(settings):
+    status = SheetsLog(not_configured(settings)).status()
     assert status["code"] == "SHEETS_NOT_CONFIGURED"
-    assert "spreadsheet_id" in status["error"]
+    assert "spreadsheet_name" in status["error"]
+
+
+class FakeClient:
+    def __init__(self, worksheet):
+        self.ws = worksheet
+        self.opened = None
+
+    def open(self, name):
+        self.opened = ("name", name)
+        return self
+
+    def open_by_key(self, key):
+        self.opened = ("id", key)
+        return self
+
+    @property
+    def sheet1(self):
+        return self.ws
+
+
+@pytest.fixture
+def fake_google(monkeypatch, worksheet):
+    """Replaces the real Google calls; records which scopes were requested."""
+    client = FakeClient(worksheet)
+    client.scopes = None
+
+    def fake_load(settings):
+        client.scopes = scopes_for(settings)
+        return object()
+
+    monkeypatch.setattr(sheets_module, "load_credentials", fake_load)
+    monkeypatch.setattr(sheets_module.gspread, "authorize", lambda creds: client)
+    return client
+
+
+def test_opens_sheet_by_name_like_before(settings, fake_google):
+    settings.sheets.spreadsheet_id = ""
+    assert SheetsLog(settings).status()["connected"] is True
+    assert fake_google.opened == ("name", "Vehicle_Tracking_System")
+    # Drive access is read-only metadata, just enough to find the sheet by name
+    assert fake_google.scopes == [SHEETS_SCOPE, DRIVE_LOOKUP_SCOPE]
+
+
+def test_opens_sheet_by_id_without_drive_access(settings, fake_google):
+    settings.sheets.spreadsheet_id = "abc123"
+    assert SheetsLog(settings).status()["connected"] is True
+    assert fake_google.opened == ("id", "abc123")
+    assert fake_google.scopes == [SHEETS_SCOPE]
 
 
 def test_invalid_credentials_json(settings, monkeypatch):

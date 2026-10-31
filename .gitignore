@@ -1,74 +1,31 @@
-# ----------------------------
 # Python
-# ----------------------------
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pyc
+*.py[cod]
 *.pkl
-
-# ----------------------------
-# Virtual Environment
-# ----------------------------
 venv/
-.env/
+.venv/
+.pytest_cache/
 
-# ----------------------------
-# Jupyter / notebooks
-# ----------------------------
-.ipynb_checkpoints/
-
-# ----------------------------
-# OS files
-# ----------------------------
-.DS_Store
-Thumbs.db
-
-# ----------------------------
-# Logs
-# ----------------------------
-*.log
-
-# ----------------------------
-# Models (optional)
-# ----------------------------
-# Comment this if you WANT to upload best.pt
-# models/
-
-# ----------------------------
-# Dataset (very important)
-# ----------------------------
+# Training data and YOLO training output
 data/
+runs/
+yolov8*.pt
 
-# ----------------------------
-# Google credentials 
-# ----------------------------
-credentials.json
-src/credentials.json
+# Google credentials - never commit these
+secrets/
 *credentials*.json
 service-account*.json
 .env
 .env.*
 !.env.example
 
-# ----------------------------
-# Streamlit cache
-# ----------------------------
-.streamlit/
-
-# ----------------------------
-# VSCode
-# ----------------------------
-.vscode/
-
-# ----------------------------
-# Temporary files
-# ----------------------------
+# Logs and temp files
+*.log
 *.tmp
 *.temp
-# pytest
-.pytest_cache/
 
-# Docker secrets (service account key for docker compose)
-secrets/
+# Editor / OS
+.vscode/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db

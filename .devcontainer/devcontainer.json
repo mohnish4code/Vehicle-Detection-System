@@ -6,15 +6,15 @@
   },
   "customizations": {
     "codespaces": {
-      "openFiles": ["README.md", "src/api/main.py"]
+      "openFiles": ["README.md", "backend/app/api/main.py"]
     },
     "vscode": {
       "extensions": ["ms-python.python", "ms-python.vscode-pylance", "bradlc.vscode-tailwindcss"]
     }
   },
-  "updateContentCommand": "sudo apt-get update && sudo apt-get install -y libgl1 && pip3 install --user torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu && pip3 install --user -r requirements-dev.txt && cd frontend && npm ci",
+  "updateContentCommand": "sudo apt-get update && sudo apt-get install -y libgl1 && pip3 install --user torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu && pip3 install --user -r backend/requirements-dev.txt && cd frontend && npm ci",
   "postAttachCommand": {
-    "api": "uvicorn src.api.main:app --host 0.0.0.0 --port 8000",
+    "api": "cd backend && uvicorn app.api.main:app --host 0.0.0.0 --port 8000",
     "web": "cd frontend && npm run dev -- --host"
   },
   "portsAttributes": {

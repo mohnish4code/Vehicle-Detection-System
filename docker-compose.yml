@@ -1,8 +1,9 @@
 services:
   backend:
-    build: .
+    build: ./backend
     environment:
       VDS_SHEETS_SPREADSHEET_ID: ${SPREADSHEET_ID:-}
+      VDS_SHEETS_SPREADSHEET_NAME: ${SPREADSHEET_NAME:-Vehicle_Tracking_System}
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google/credentials.json
       VDS_API_CORS_ORIGINS: ${PUBLIC_URL:-http://localhost:8080}
     volumes:

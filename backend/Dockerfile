@@ -26,10 +26,10 @@ RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False, verbose=False)"
 
 COPY --chown=app config.toml .
 COPY --chown=app models/best.pt models/best.pt
-COPY --chown=app src/ src/
+COPY --chown=app app/ app/
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=180s \
     CMD curl -fs http://localhost:8000/api/health || exit 1
 
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

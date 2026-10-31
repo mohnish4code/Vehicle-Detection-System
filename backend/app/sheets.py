@@ -28,8 +28,9 @@ log = logging.getLogger(__name__)
 
 IST = ZoneInfo("Asia/Kolkata")
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-# Sheets only - the service account doesn't need access to the rest of Drive
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+# Only needed to find a spreadsheet by its name; it can list file names but not read or change files
+DRIVE_LOOKUP_SCOPE = "https://www.googleapis.com/auth/drive.metadata.readonly"
 HEADER = ["Plate", "Timestamp (IST)", "Source", "Detection Conf", "OCR Conf", "Format"]
 
 RETRY_STATUS = {429, 500, 502, 503, 504}
@@ -89,13 +90,19 @@ def _to_float(value: str) -> float | None:
         return None
 
 
+def scopes_for(settings: Settings) -> list[str]:
+    # With the sheet ID we don't need Drive at all
+    return [SHEETS_SCOPE] if settings.sheets.spreadsheet_id else [SHEETS_SCOPE, DRIVE_LOOKUP_SCOPE]
+
+
 def load_credentials(settings: Settings) -> Credentials:
     """Service account key from GOOGLE_CREDENTIALS (the JSON itself),
     GOOGLE_APPLICATION_CREDENTIALS (a path) or the file in config.toml."""
+    scopes = scopes_for(settings)
     try:
         if os.environ.get("GOOGLE_CREDENTIALS"):
             info = json.loads(os.environ["GOOGLE_CREDENTIALS"])
-            return Credentials.from_service_account_info(info, scopes=SCOPES)
+            return Credentials.from_service_account_info(info, scopes=scopes)
 
         path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or settings.sheets.credentials_file
         path = settings.path(path)
@@ -105,21 +112,23 @@ def load_credentials(settings: Settings) -> Credentials:
                 "See the README for how to add one.",
                 code="SHEETS_NOT_CONFIGURED",
             )
-        return Credentials.from_service_account_file(str(path), scopes=SCOPES)
+        return Credentials.from_service_account_file(str(path), scopes=scopes)
     except (ValueError, KeyError) as e:  # bad JSON or missing fields in the key
         raise SheetsError("The Google service account key is invalid.", code="SHEETS_NOT_CONFIGURED") from e
 
 
 def open_worksheet(settings: Settings):
     cfg = settings.sheets
-    if not cfg.spreadsheet_id:
+    if not cfg.spreadsheet_id and not cfg.spreadsheet_name:
         raise SheetsError(
-            "Google Sheets isn't set up: spreadsheet_id is missing in config.toml "
-            "(or VDS_SHEETS_SPREADSHEET_ID).",
+            "Google Sheets isn't set up: set spreadsheet_name or spreadsheet_id in config.toml.",
             code="SHEETS_NOT_CONFIGURED",
         )
     client = gspread.authorize(load_credentials(settings))
-    spreadsheet = client.open_by_key(cfg.spreadsheet_id)
+    if cfg.spreadsheet_id:
+        spreadsheet = client.open_by_key(cfg.spreadsheet_id)
+    else:
+        spreadsheet = client.open(cfg.spreadsheet_name)
     return spreadsheet.worksheet(cfg.worksheet) if cfg.worksheet else spreadsheet.sheet1
 
 
@@ -128,8 +137,8 @@ def translate_error(e: Exception) -> AppError:
     if isinstance(e, AppError):
         return e
     if isinstance(e, (gspread.SpreadsheetNotFound, gspread.WorksheetNotFound)):
-        return SheetsError("The Google Sheet or worksheet wasn't found. Check spreadsheet_id and worksheet "
-                           "in the config.", code="SHEETS_NOT_FOUND")
+        return SheetsError("The Google Sheet or worksheet wasn't found. Check the sheet name / ID in the config "
+                           "and that the sheet is shared with the service account.", code="SHEETS_NOT_FOUND")
     if isinstance(e, gspread.exceptions.APIError):
         if e.code == 429:
             return SheetsError("Google Sheets quota exceeded. Wait a minute and try again.",
@@ -138,7 +147,7 @@ def translate_error(e: Exception) -> AppError:
             return SheetsError("No permission to use the Google Sheet. Share it with the service account's "
                                "email as an Editor.", code="SHEETS_PERMISSION")
         if e.code == 404:
-            return SheetsError("The Google Sheet wasn't found. Check spreadsheet_id in the config.",
+            return SheetsError("The Google Sheet wasn't found. Check the sheet name / ID in the config.",
                                code="SHEETS_NOT_FOUND")
         return SheetsError("Google Sheets returned an error. Try again shortly.")
     if isinstance(e, (requests.ConnectionError, requests.Timeout, TransportError)):
@@ -185,7 +194,8 @@ class SheetsLog:
                 raise self._error from e
 
             self._ws, self._error = ws, None
-            log.info("Connected to Google Sheet %s", self.settings.sheets.spreadsheet_id)
+            cfg = self.settings.sheets
+            log.info("Connected to Google Sheet %s", cfg.spreadsheet_id or repr(cfg.spreadsheet_name))
             return ws
 
     def status(self) -> dict:

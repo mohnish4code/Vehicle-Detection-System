@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import create_app
-from src.sheets import HEADER, SheetsLog
+from app.api.main import create_app
+from app.sheets import HEADER, SheetsLog
 
 from .conftest import FakePipeline, api_error, image_bytes, make_plate
 
@@ -41,14 +41,13 @@ def test_health_ok(client):
 
 
 def test_health_degraded_without_model_or_sheets(settings):
-    settings.sheets.spreadsheet_id = ""
     pipe = FakePipeline(loaded=False, error="Model file not found (models/best.pt).")
     with TestClient(create_app(settings, pipe, SheetsLog(settings))) as c:
         body = c.get("/api/health").json()
     assert body["status"] == "degraded"
     assert body["model"] == {"ok": False, "error": "Model file not found (models/best.pt)."}
     assert body["sheets"]["ok"] is False
-    assert "spreadsheet_id" in body["sheets"]["error"]
+    assert "service account key" in body["sheets"]["error"]
 
 
 # -- detect --
@@ -256,7 +255,7 @@ def test_save_when_sheets_down(client, sheets, worksheet, settings):
 
 
 def test_save_when_sheets_not_configured(settings, pipeline):
-    settings.sheets.spreadsheet_id = ""
+    # settings point at a key file that doesn't exist
     with TestClient(create_app(settings, pipeline, SheetsLog(settings))) as c:
         assert_error(c.post("/api/logs", json={"plate": "MH12DE1433"}), 503, "SHEETS_NOT_CONFIGURED")
         # detection still works without Sheets

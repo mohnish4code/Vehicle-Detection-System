@@ -32,12 +32,15 @@ max_file_mb = 10
 max_image_megapixels = 40
 
 [sheets]
-# The long ID in the sheet URL: docs.google.com/spreadsheets/d/<this part>/edit
+# The sheet is found by its name. The service account must have Editor access to it.
+spreadsheet_name = "Vehicle_Tracking_System"
+# Optional: the long ID from the sheet URL (docs.google.com/spreadsheets/d/<ID>/edit).
+# If set it is used instead of the name, and the app then needs no Drive access at all.
 spreadsheet_id = ""
 # Leave empty to use the first tab
 worksheet = ""
 # Service account key. GOOGLE_CREDENTIALS / GOOGLE_APPLICATION_CREDENTIALS env vars win over this.
-credentials_file = "src/credentials.json"
+credentials_file = "../secrets/credentials.json"
 # Refuse to log the same plate again within this many minutes
 dedupe_minutes = 10
 retries = 3

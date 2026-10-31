@@ -1,6 +1,6 @@
 """FastAPI backend.
 
-    uvicorn src.api.main:app --reload
+    uvicorn app.api.main:app --reload   (run from backend/)
 """
 
 import base64

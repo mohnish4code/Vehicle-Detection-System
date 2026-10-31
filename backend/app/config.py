@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, fields
 from functools import lru_cache
 from pathlib import Path
 
+# backend/ - relative paths in config.toml are resolved from here
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG_FILE = Path(os.environ.get("VDS_CONFIG", ROOT / "config.toml"))
 
@@ -41,9 +42,10 @@ class ApiSettings:
 
 @dataclass
 class SheetsSettings:
+    spreadsheet_name: str = "Vehicle_Tracking_System"
     spreadsheet_id: str = ""
     worksheet: str = ""
-    credentials_file: str = "src/credentials.json"
+    credentials_file: str = "../secrets/credentials.json"
     dedupe_minutes: int = 10
     retries: int = 3
     retry_base_seconds: float = 1.0
