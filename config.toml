@@ -1,0 +1,25 @@
+# Default settings. Any value can be overridden with an environment variable
+# named VDS_<SECTION>_<KEY>, e.g. VDS_MODEL_CONFIDENCE=0.4
+
+[model]
+weights = "models/best.pt"
+confidence = 0.25
+
+[ocr]
+languages = ["en"]
+gpu = false
+# Margin added around the detected box: crop_padding_ratio of the box size,
+# but at least crop_padding pixels. YOLO boxes often clip the last character.
+crop_padding = 25
+crop_padding_ratio = 0.15
+upscale = 2
+# Reads below this confidence, or needing more swaps than max_fixes,
+# are marked "needs review" even if the format is valid
+min_confidence = 0.5
+max_fixes = 2
+# Text OCR picks up on plates that isn't part of the number
+ignore_words = ["IND", "INDIA"]
+
+[sheets]
+spreadsheet_name = "Vehicle_Tracking_System"
+credentials_file = "src/credentials.json"
