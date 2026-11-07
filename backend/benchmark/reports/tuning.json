@@ -1,0 +1,333 @@
+{
+  "labels": "dataset_plates.csv",
+  "split": "dev",
+  "plates": 76,
+  "base_settings": {
+    "languages": [
+      "en"
+    ],
+    "gpu": false,
+    "crop_padding": 4,
+    "crop_padding_ratio": 0.15,
+    "upscale": 2,
+    "target_height": 140,
+    "min_confidence": 0.5,
+    "max_fixes": 2,
+    "early_stop_confidence": 0.9,
+    "decoder": "constrained",
+    "engines": [
+      "easyocr"
+    ],
+    "ignore_words": [
+      "IND",
+      "INDIA"
+    ]
+  },
+  "machine": {
+    "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+    "logical_cpus": 4,
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.4",
+    "git_commit": "9f78fa5+changes",
+    "date": "2026-11-07T18:26:24"
+  },
+  "grid": [
+    {
+      "engines": [
+        "easyocr"
+      ],
+      "early_stop_confidence": 0.9,
+      "plates": 76,
+      "exact": 55,
+      "exact_rate": 0.7237,
+      "cer": 0.069,
+      "accepted": 40,
+      "accepted_correct": 35,
+      "wrong_not_flagged": 5,
+      "correct_but_flagged": 20,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 3.61
+    },
+    {
+      "engines": [
+        "easyocr"
+      ],
+      "early_stop_confidence": 1.1,
+      "plates": 76,
+      "exact": 55,
+      "exact_rate": 0.7237,
+      "cer": 0.069,
+      "accepted": 40,
+      "accepted_correct": 35,
+      "wrong_not_flagged": 5,
+      "correct_but_flagged": 20,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 3.95
+    },
+    {
+      "engines": [
+        "paddle"
+      ],
+      "early_stop_confidence": 0.9,
+      "plates": 76,
+      "exact": 69,
+      "exact_rate": 0.9079,
+      "cer": 0.0189,
+      "accepted": 70,
+      "accepted_correct": 67,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 2,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 1.38
+    },
+    {
+      "engines": [
+        "paddle"
+      ],
+      "early_stop_confidence": 1.1,
+      "plates": 76,
+      "exact": 69,
+      "exact_rate": 0.9079,
+      "cer": 0.0189,
+      "accepted": 70,
+      "accepted_correct": 67,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 2,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 1.99
+    },
+    {
+      "engines": [
+        "paddle",
+        "easyocr"
+      ],
+      "early_stop_confidence": 0.9,
+      "plates": 76,
+      "exact": 69,
+      "exact_rate": 0.9079,
+      "cer": 0.0108,
+      "accepted": 72,
+      "accepted_correct": 67,
+      "wrong_not_flagged": 5,
+      "correct_but_flagged": 2,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 2.62
+    },
+    {
+      "engines": [
+        "paddle",
+        "easyocr"
+      ],
+      "early_stop_confidence": 1.1,
+      "plates": 76,
+      "exact": 69,
+      "exact_rate": 0.9079,
+      "cer": 0.0108,
+      "accepted": 71,
+      "accepted_correct": 67,
+      "wrong_not_flagged": 4,
+      "correct_but_flagged": 2,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 5.93
+    },
+    {
+      "engines": [
+        "easyocr",
+        "paddle"
+      ],
+      "early_stop_confidence": 0.9,
+      "plates": 76,
+      "exact": 66,
+      "exact_rate": 0.8684,
+      "cer": 0.0149,
+      "accepted": 69,
+      "accepted_correct": 64,
+      "wrong_not_flagged": 5,
+      "correct_but_flagged": 2,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 4.82
+    },
+    {
+      "engines": [
+        "easyocr",
+        "paddle"
+      ],
+      "early_stop_confidence": 1.1,
+      "plates": 76,
+      "exact": 69,
+      "exact_rate": 0.9079,
+      "cer": 0.0108,
+      "accepted": 71,
+      "accepted_correct": 67,
+      "wrong_not_flagged": 4,
+      "correct_but_flagged": 2,
+      "seconds_mean": 0.0,
+      "variants_used_mean": 5.93
+    }
+  ],
+  "best": {
+    "engines": [
+      "paddle"
+    ],
+    "early_stop_confidence": 0.9,
+    "plates": 76,
+    "exact": 69,
+    "exact_rate": 0.9079,
+    "cer": 0.0189,
+    "accepted": 70,
+    "accepted_correct": 67,
+    "wrong_not_flagged": 3,
+    "correct_but_flagged": 2,
+    "seconds_mean": 0.0,
+    "variants_used_mean": 1.38
+  },
+  "review_tradeoff": [
+    {
+      "min_confidence": 0.3,
+      "max_fixes": 0,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 16,
+      "accepted": 55
+    },
+    {
+      "min_confidence": 0.3,
+      "max_fixes": 1,
+      "wrong_not_flagged": 4,
+      "correct_but_flagged": 4,
+      "accepted": 69
+    },
+    {
+      "min_confidence": 0.3,
+      "max_fixes": 2,
+      "wrong_not_flagged": 5,
+      "correct_but_flagged": 0,
+      "accepted": 74
+    },
+    {
+      "min_confidence": 0.4,
+      "max_fixes": 0,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 16,
+      "accepted": 55
+    },
+    {
+      "min_confidence": 0.4,
+      "max_fixes": 1,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 4,
+      "accepted": 68
+    },
+    {
+      "min_confidence": 0.4,
+      "max_fixes": 2,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 1,
+      "accepted": 71
+    },
+    {
+      "min_confidence": 0.5,
+      "max_fixes": 0,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 16,
+      "accepted": 55
+    },
+    {
+      "min_confidence": 0.5,
+      "max_fixes": 1,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 4,
+      "accepted": 68
+    },
+    {
+      "min_confidence": 0.5,
+      "max_fixes": 2,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 2,
+      "accepted": 70
+    },
+    {
+      "min_confidence": 0.6,
+      "max_fixes": 0,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 16,
+      "accepted": 55
+    },
+    {
+      "min_confidence": 0.6,
+      "max_fixes": 1,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 4,
+      "accepted": 68
+    },
+    {
+      "min_confidence": 0.6,
+      "max_fixes": 2,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 2,
+      "accepted": 70
+    },
+    {
+      "min_confidence": 0.7,
+      "max_fixes": 0,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 16,
+      "accepted": 55
+    },
+    {
+      "min_confidence": 0.7,
+      "max_fixes": 1,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 8,
+      "accepted": 64
+    },
+    {
+      "min_confidence": 0.7,
+      "max_fixes": 2,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 7,
+      "accepted": 65
+    },
+    {
+      "min_confidence": 0.8,
+      "max_fixes": 0,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 16,
+      "accepted": 55
+    },
+    {
+      "min_confidence": 0.8,
+      "max_fixes": 1,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 11,
+      "accepted": 61
+    },
+    {
+      "min_confidence": 0.8,
+      "max_fixes": 2,
+      "wrong_not_flagged": 3,
+      "correct_but_flagged": 11,
+      "accepted": 61
+    },
+    {
+      "min_confidence": 0.9,
+      "max_fixes": 0,
+      "wrong_not_flagged": 1,
+      "correct_but_flagged": 19,
+      "accepted": 51
+    },
+    {
+      "min_confidence": 0.9,
+      "max_fixes": 1,
+      "wrong_not_flagged": 1,
+      "correct_but_flagged": 19,
+      "accepted": 51
+    },
+    {
+      "min_confidence": 0.9,
+      "max_fixes": 2,
+      "wrong_not_flagged": 1,
+      "correct_but_flagged": 19,
+      "accepted": 51
+    }
+  ]
+}

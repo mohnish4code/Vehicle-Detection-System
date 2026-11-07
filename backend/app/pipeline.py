@@ -70,6 +70,9 @@ def preprocess_variants(crop: np.ndarray, scale: float = 2) -> list[np.ndarray]:
     return [gray, clahe, adaptive, otsu]
 
 
+VARIANT_NAMES = ("gray", "clahe", "adaptive", "otsu")
+
+
 def _text_boxes(ocr_results, ignore_words) -> list[dict]:
     """(bbox, text, prob[, probs]) tuples -> dicts with position, minus empty / ignored text."""
     ignore = {w.upper() for w in ignore_words}
@@ -197,6 +200,42 @@ def pick_read(reads: list[OcrRead]) -> OcrRead:
     return max(reads, key=read_rank) if reads else OcrRead("", 0.0)
 
 
+def charset_map(charset: list[str]) -> np.ndarray:
+    """Matrix taking a recognizer's output columns (index 0 = CTC blank) to blank + PLATE_CHARS.
+
+    Lowercase letters count towards their uppercase letter; everything else is dropped.
+    """
+    index = {ch: i for i, ch in enumerate(charset)}
+    out = np.zeros((len(charset), len(PLATE_CHARS) + 1), np.float32)
+    out[0, 0] = 1
+    for i, ch in enumerate(PLATE_CHARS, 1):
+        for variant in {ch, ch.lower()}:
+            if variant in index:
+                out[index[variant], i] = 1
+    return out
+
+
+def read_variants(variant_ocr, ocr) -> tuple[OcrRead, list[OcrRead]]:
+    """Decode each variant's OCR boxes, stopping early on a confident read.
+
+    variant_ocr yields (name, OCR boxes) per engine and variant; ocr is the
+    [ocr] settings. Returns the chosen read and every variant's read.
+    """
+    reads = []
+    for _, boxes in variant_ocr:
+        if ocr.decoder == "constrained":
+            read = decode_rows(_rows(_text_boxes(boxes, ocr.ignore_words)), PLATE_CHARS)
+        else:
+            read = best_read(group_rows(boxes, ocr.ignore_words))
+        if not read:
+            continue
+        log.debug("OCR variant read %r -> %r (conf %.2f)", read.raw, read.text, read.confidence)
+        reads.append(read)
+        if read.valid and read.fixes == 0 and read.confidence >= ocr.early_stop_confidence:
+            break
+    return pick_read(reads), reads
+
+
 def read_rank(read: OcrRead):
     # Valid plates first: longest, then fewest swaps, then most confident.
     # Invalid text is only a fallback, ranked the way the old code did (length * prob).
@@ -210,6 +249,7 @@ class PlatePipeline:
         self.settings = settings or get_settings()
         self.model = None
         self.reader = None
+        self.paddle = None
         self.error: str | None = None
         self._cols: list[int] | None = None
         self.last_reads: list[OcrRead] = []
@@ -217,9 +257,8 @@ class PlatePipeline:
         self._lock = threading.Lock()
 
     def load(self):
-        """Load YOLO and EasyOCR. Slow, so do it once and reuse the pipeline."""
+        """Load YOLO and the OCR engines. Slow, so do it once and reuse the pipeline."""
         from ultralytics import YOLO
-        import easyocr
 
         weights = self.settings.path(self.settings.model.weights)
         if not weights.exists():
@@ -227,13 +266,28 @@ class PlatePipeline:
 
         start = time.perf_counter()
         self.model = YOLO(str(weights))
-        self.reader = easyocr.Reader(self.settings.ocr.languages, gpu=self.settings.ocr.gpu, verbose=False)
-        log.info("Loaded model %s and OCR in %.1fs", weights.name, time.perf_counter() - start)
+        self.load_ocr()
+        log.info("Loaded model %s and OCR %s in %.1fs", weights.name, self.settings.ocr.engines,
+                 time.perf_counter() - start)
+        return self
+
+    def load_ocr(self):
+        ocr = self.settings.ocr
+        if "easyocr" in ocr.engines and self.reader is None:
+            import easyocr
+            self.reader = easyocr.Reader(ocr.languages, gpu=ocr.gpu, verbose=False)
+        if "paddle" in ocr.engines and self.paddle is None:
+            from rapidocr_onnxruntime import RapidOCR
+            self.paddle = RapidOCR()
+            self._paddle_map = charset_map(self.paddle.text_rec.postprocess_op.character)
         return self
 
     @property
     def loaded(self) -> bool:
-        return self.model is not None and self.reader is not None
+        engines = self.settings.ocr.engines
+        return (self.model is not None
+                and ("easyocr" not in engines or self.reader is not None)
+                and ("paddle" not in engines or self.paddle is not None))
 
     def _char_probs(self, line: np.ndarray) -> np.ndarray | None:
         """Recognizer output for one text line (already 64 px high): frames x (blank + PLATE_CHARS)."""
@@ -268,23 +322,57 @@ class PlatePipeline:
             out.append((quad, greedy(probs, PLATE_CHARS), custom_mean(peaks) if len(peaks) else 0.0, probs))
         return out
 
-    def read_text(self, crop: np.ndarray) -> OcrRead:
-        ocr = self.settings.ocr
-        reads = []
-        for variant in preprocess_variants(crop, ocr_scale(crop, ocr.target_height, ocr.upscale)):
-            if ocr.decoder == "constrained":
-                read = decode_rows(_rows(_text_boxes(self._ocr_boxes(variant), ocr.ignore_words)), PLATE_CHARS)
-            else:
-                read = best_read(group_rows(self.reader.readtext(variant, allowlist=PLATE_CHARS), ocr.ignore_words))
-            if not read:
+    def _paddle_boxes(self, img: np.ndarray) -> list[tuple]:
+        """Same output as _ocr_boxes, from RapidOCR's PP-OCR text detector and recognizer."""
+        if img.ndim == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        boxes, _ = self.paddle.auto_text_det(img)
+        if boxes is None:
+            return []
+        rec = self.paddle.text_rec
+        _, rec_h, rec_w = rec.rec_image_shape
+        out = []
+        for quad, line in zip(boxes, self.paddle.get_crop_img_list(img, boxes), strict=True):
+            h, w = line.shape[:2]
+            if w < 8 or h < 4:
                 continue
-            log.debug("OCR variant read %r -> %r (conf %.2f)", read.raw, read.text, read.confidence)
-            reads.append(read)
-            if read.valid and read.fixes == 0 and read.confidence >= ocr.early_stop_confidence:
-                break
+            x = rec.resize_norm_img(line, max(rec_w / rec_h, w / h))[None].astype(np.float32)
+            probs = rec.session(x)[0][0] @ self._paddle_map
+            probs /= probs.sum(axis=1, keepdims=True)
+            # drop the frames that only cover the right-hand padding
+            probs = probs[:max(1, int(np.ceil(probs.shape[0] * min(1.0, (w / h) / (x.shape[3] / rec_h)))))]
+            best = probs.argmax(axis=1)
+            peaks = probs.max(axis=1)[best != 0]
+            out.append((quad.tolist(), greedy(probs, PLATE_CHARS), float(np.mean(peaks)) if len(peaks) else 0.0,
+                        probs))
+        return out
 
-        self.last_reads = reads  # every variant's read, for scripts/evaluate.py
-        return pick_read(reads)
+    def variant_ocr(self, crop: np.ndarray):
+        """OCR output for each engine and preprocessing variant, computed lazily (so early stopping saves time).
+
+        Yields (name, boxes). PaddleOCR reads the colour crop and the contrast-enhanced one;
+        EasyOCR reads all four variants from preprocess_variants.
+        """
+        ocr = self.settings.ocr
+        scale = ocr_scale(crop, ocr.target_height, ocr.upscale)
+        for engine in ocr.engines:
+            if engine == "paddle":
+                interp = cv2.INTER_CUBIC if scale >= 1 else cv2.INTER_AREA
+                color = cv2.resize(crop, None, fx=scale, fy=scale, interpolation=interp)
+                yield "paddle:color", self._paddle_boxes(color)
+                yield "paddle:clahe", self._paddle_boxes(preprocess_variants(crop, scale)[1])
+            elif engine == "easyocr":
+                for name, variant in zip(VARIANT_NAMES, preprocess_variants(crop, scale), strict=True):
+                    if ocr.decoder == "constrained":
+                        yield f"easyocr:{name}", self._ocr_boxes(variant)
+                    else:
+                        yield f"easyocr:{name}", self.reader.readtext(variant, allowlist=PLATE_CHARS)
+            else:
+                raise ValueError(f"Unknown OCR engine {engine!r}")
+
+    def read_text(self, crop: np.ndarray) -> OcrRead:
+        read, self.last_reads = read_variants(self.variant_ocr(crop), self.settings.ocr)
+        return read
 
     def detect(self, image: np.ndarray) -> list[PlateResult]:
         if not self.loaded:

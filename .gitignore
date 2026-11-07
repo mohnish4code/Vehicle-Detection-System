@@ -29,3 +29,6 @@ service-account*.json
 .ipynb_checkpoints/
 .DS_Store
 Thumbs.db
+
+# Cached OCR output from scripts/tune.py
+backend/benchmark/cache/

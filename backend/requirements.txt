@@ -2,6 +2,9 @@ ultralytics==8.4.41
 torch==2.11.0
 torchvision==0.26.0
 easyocr==1.7.2
+# PP-OCRv4 text detection + recognition on onnxruntime ([ocr] engines = "paddle")
+rapidocr-onnxruntime==1.4.4
+onnxruntime==1.31.1
 numpy==1.26.4
 # ultralytics pulls in opencv-python and easyocr pulls in the headless build.
 # Both install the same cv2 module, so keep them on the same version.

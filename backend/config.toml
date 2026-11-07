@@ -11,6 +11,10 @@ gpu = false
 # "constrained" reads the text straight from the OCR's character probabilities and
 # only allows valid plates; "classic" fixes look-alike characters afterwards.
 decoder = "constrained"
+# OCR engines, in order: "paddle" (PP-OCRv4 via RapidOCR) and/or "easyocr". Every variant
+# they read votes. On the dev set (scripts/tune.py, reports/tuning.json) paddle alone read
+# 69/76 plates vs 55/76 for easyocr; both together also read 69 but were slower.
+engines = ["paddle"]
 # Margin added around the detected box: crop_padding_ratio of the box size,
 # but at least crop_padding pixels. YOLO boxes often clip the last character.
 crop_padding = 4
@@ -20,8 +24,10 @@ crop_padding_ratio = 0.15
 target_height = 140
 upscale = 2
 # Reads below this confidence, or needing more corrections than max_fixes,
-# are marked "needs review" even if the format is valid
-min_confidence = 0.5
+# are marked "needs review" even if the format is valid. 0.9 was picked on the dev
+# set to keep wrong-but-accepted reads near zero (1 of 76, at the cost of flagging
+# 19 correct reads); 0.5 accepted 3 wrong ones. See review_tradeoff in reports/tuning.json.
+min_confidence = 0.9
 max_fixes = 2
 # Skip the remaining preprocessing variants once a read is valid, needs no
 # fixes and is at least this confident. Set to 1.1 to always run all of them.

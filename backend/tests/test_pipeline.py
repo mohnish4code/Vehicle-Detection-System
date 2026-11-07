@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from app.config import Settings
-from app.pipeline import PlatePipeline, ocr_scale, preprocess_variants
+from app.pipeline import PLATE_CHARS, PlatePipeline, charset_map, ocr_scale, preprocess_variants
 
 
 class FakeReader:
@@ -19,6 +19,7 @@ class FakeReader:
 
 def pipeline_with(reads):
     settings = Settings()
+    settings.ocr.engines = ["easyocr"]
     settings.ocr.decoder = "classic"  # FakeReader only mimics readtext()
     pipe = PlatePipeline(settings)
     pipe.reader = FakeReader(reads)
@@ -78,3 +79,61 @@ def test_crop_padding_scales_with_plate():
     image = np.zeros((500, 500, 3), np.uint8)
     # small far-away plate: margin stays small instead of a fixed 25px
     assert pipe.crop_plate(image, (100, 100, 160, 115)).shape[:2] == (23, 78)
+
+
+CHARSET = ["blank", *"abcdefghijklmnopqrstuvwxyz", *PLATE_CHARS, "京", "-"]
+
+
+class FakeRecognizer:
+    """Mimics RapidOCR's text_rec: emits each character of `text` followed by a blank frame."""
+    rec_image_shape = [3, 48, 320]
+
+    def __init__(self, text):
+        self.text = text
+        self.postprocess_op = type("Post", (), {"character": CHARSET})()
+
+    def resize_norm_img(self, img, max_wh_ratio):
+        return np.zeros((3, 48, int(48 * max_wh_ratio)), np.float32)
+
+    def session(self, x):
+        frames = x.shape[3] // 8
+        probs = np.zeros((frames, len(CHARSET)), np.float32)
+        probs[:, 0] = 1
+        for i, ch in enumerate(self.text):
+            probs[2 * i] = 0
+            probs[2 * i, CHARSET.index(ch)] = 1
+        return [probs[None]]
+
+
+class FakePaddle:
+    def __init__(self, text):
+        self.text_rec = FakeRecognizer(text)
+
+    def auto_text_det(self, img):
+        return [np.array([[0, 0], [400, 0], [400, 40], [0, 40]], np.float32)], 0.0
+
+    def get_crop_img_list(self, img, boxes):
+        return [np.zeros((40, 400, 3), np.uint8)]
+
+
+def paddle_pipeline(text):
+    settings = Settings()
+    settings.ocr.engines = ["paddle"]
+    pipe = PlatePipeline(settings)
+    pipe.paddle = FakePaddle(text)
+    pipe._paddle_map = charset_map(CHARSET)
+    return pipe
+
+
+def test_charset_map_folds_lowercase_and_drops_other_chars():
+    m = charset_map(CHARSET)
+    assert m.shape == (len(CHARSET), len(PLATE_CHARS) + 1)
+    assert m[CHARSET.index("h"), PLATE_CHARS.index("H") + 1] == 1
+    assert m[CHARSET.index("H"), PLATE_CHARS.index("H") + 1] == 1
+    assert m[CHARSET.index("京")].sum() == 0
+
+
+def test_paddle_engine_feeds_the_plate_decoder():
+    # lowercase "h" from the recognizer still reads as H
+    read = paddle_pipeline("Mh12DE1433").read_text(CROP)
+    assert read.text == "MH12DE1433" and read.valid

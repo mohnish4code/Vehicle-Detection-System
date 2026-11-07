@@ -27,12 +27,15 @@ class OcrSettings:
     crop_padding_ratio: float = 0.15
     upscale: float = 2
     target_height: int = 140
-    min_confidence: float = 0.5
+    min_confidence: float = 0.9
     max_fixes: int = 2
     early_stop_confidence: float = 0.9
     # "constrained": decode straight from character probabilities, only allowing valid plates
     # "classic": take EasyOCR's text and fix known look-alike characters afterwards
     decoder: str = "constrained"
+    # Recognizers to run, in order: "paddle" (PP-OCRv4 via RapidOCR) and/or "easyocr".
+    # Every variant they read votes on the result. "paddle" needs decoder = "constrained".
+    engines: list[str] = field(default_factory=lambda: ["paddle"])
     ignore_words: list[str] = field(default_factory=lambda: ["IND", "INDIA"])
 
 
