@@ -59,3 +59,17 @@ python -m scripts.evaluate --labels benchmark/heldout_plates.csv --mode e2e     
 Each `--report` JSON holds the settings, the machine (CPU, commit), the summary, numbers per category
 and every plate's result. `wrong_not_flagged` counts plates the app would accept without asking for
 review even though the text is wrong.
+
+## Reports
+
+| File | What | Made by |
+|---|---|---|
+| `baseline_ocr.json`, `baseline.json` | EasyOCR pipeline on dev (OCR only / with detection) | `evaluate.py` |
+| `heldout_baseline_ocr.json`, `heldout_baseline_e2e.json` | EasyOCR pipeline on the held-out set | `evaluate.py` |
+| `tuning.json` | Engine comparison and review-threshold trade-off on dev | `tune.py` |
+| `heldout_ocr.json`, `heldout_e2e.json`, `dev_e2e.json` | PaddleOCR pipeline (the current default) | `evaluate.py` |
+| `benchmark.json` | Speed per image and throughput | `benchmark.py` |
+
+The held-out EasyOCR baselines were run with the current code and
+`--set engines=easyocr --set min_confidence=0.5`, i.e. the old settings. The held-out OCR-only
+reports were re-run at a clean commit; the numbers matched the first runs exactly.
