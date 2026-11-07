@@ -45,6 +45,9 @@ max_files = 10
 max_file_mb = 10
 # Rejects absurdly large images (e.g. 10000x10000) before running the model
 max_image_megapixels = 40
+# The built web app (`npm run build` in frontend/), served at http://127.0.0.1:8000/ so the
+# backend alone runs everything. Set to "" to serve only the API (e.g. behind nginx in Docker).
+frontend_dir = "../frontend/dist"
 
 [sheets]
 # The sheet is found by its name. The service account must have Editor access to it.

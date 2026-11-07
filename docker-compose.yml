@@ -6,6 +6,8 @@ services:
       VDS_SHEETS_SPREADSHEET_NAME: ${SPREADSHEET_NAME:-Vehicle_Tracking_System}
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google/credentials.json
       VDS_API_CORS_ORIGINS: ${PUBLIC_URL:-http://localhost:8080}
+      # nginx in the frontend container serves the web app here
+      VDS_API_FRONTEND_DIR: ""
     volumes:
       # Put the service account key at ./secrets/credentials.json.
       # Without it the app still runs, it just can't log to Sheets.

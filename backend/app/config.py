@@ -47,6 +47,8 @@ class ApiSettings:
     max_files: int = 10
     max_file_mb: float = 10
     max_image_megapixels: float = 40
+    # The built React app (npm run build), served at / so one server runs everything. "" turns it off.
+    frontend_dir: str = "../frontend/dist"
 
 
 @dataclass

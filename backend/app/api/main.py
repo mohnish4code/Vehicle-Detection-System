@@ -1,6 +1,7 @@
 """FastAPI backend.
 
-    uvicorn app.api.main:app --reload   (run from backend/)
+    uvicorn main:app --reload           (from the project folder; also serves the web app)
+    uvicorn app.api.main:app --reload   (from backend/)
 """
 
 import base64
@@ -21,6 +22,7 @@ from ..plates import plate_format
 from ..sheets import SheetsLog
 from . import schemas
 from .errors import error_response, install_error_handlers
+from .frontend import mount_frontend
 from .uploads import RejectedUpload, decode_image, read_limited
 
 log = logging.getLogger(__name__)
@@ -145,6 +147,8 @@ def create_app(settings: Settings | None = None, pipeline: PlatePipeline | None 
         items, total = request.app.state.sheets.recent(limit=limit, query=q, fmt=format, source=source)
         return schemas.LogList(items=[e.as_dict() for e in items], total=total)
 
+    # Last, so the API and /docs routes match first
+    mount_frontend(app, settings.path(api.frontend_dir) if api.frontend_dir else None)
     return app
 
 

@@ -156,6 +156,45 @@ flowchart LR
 
 ## Running it
 
+From the project folder, with the virtual environment active:
+
+```bash
+uvicorn main:app --reload
+```
+
+Open **http://127.0.0.1:8000**. That one server runs the API *and* the web app.
+`python main.py` does the same and opens the browser for you once the models have loaded.
+API docs are at http://127.0.0.1:8000/docs.
+
+### First-time setup
+
+Python 3.12 and Node 20:
+
+```bash
+python -m venv venv
+venv\Scripts\activate                      # macOS/Linux: source venv/bin/activate
+pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+pip install -r backend/requirements.txt
+
+cd frontend
+npm install
+npm run build                              # builds the web app into frontend/dist
+cd ..
+```
+
+Node is only needed for that build. Run `npm run build` again after changing the frontend.
+
+In a new terminal, activate the environment again (`venv\Scripts\activate`) before `uvicorn`.
+If PowerShell refuses to run the activate script, run
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
+
+### Working on the frontend
+
+For hot reload while editing the React code, run the backend as above and, in a second terminal,
+`npm run dev` in `frontend/`, then open http://localhost:5173. Vite forwards `/api` to port 8000.
+To use the phone camera, run `npm run dev -- --host` and open the network URL it prints on your
+phone (same Wi-Fi).
+
 ### With Docker
 
 ```bash
@@ -166,40 +205,14 @@ docker compose up --build
 
 Open http://localhost:8080. The backend takes a minute or two to load the models on first start.
 
-### Without Docker
+### If something's wrong
 
-Backend (Python 3.12):
-
-```bash
-python -m venv venv
-venv\Scripts\activate             # macOS/Linux: source venv/bin/activate
-cd backend
-pip install -r requirements.txt
-uvicorn app.api.main:app --reload
-```
-
-API docs: http://localhost:8000/docs
-
-Frontend (Node 20), in a second terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open http://localhost:5173. Vite forwards `/api` to the backend on port 8000.
-
-**If the page says the backend isn't running** or "Port 5173 is already in use":
-
-- The backend terminal must show `Application startup complete` (the first start takes ~10–20 s).
-  The page reconnects by itself once it does.
-- Another dev server is still holding a port. Close the old terminal, or find and stop it:
-  `netstat -ano | findstr ":5173 :8000"` then `taskkill /PID <pid> /T /F`.
-  The frontend refuses to start on another port on purpose, so you never end up on a stale page.
-
-To use the phone camera during development, run `npm run dev -- --host` and open the
-network URL it prints on your phone (same Wi-Fi).
+- **The page says the backend isn't running:** wait for `Application startup complete` in the
+  terminal (the first start takes ~10–20 s). The page reconnects by itself.
+- **"The web app hasn't been built yet"** at http://127.0.0.1:8000: run `npm install` and
+  `npm run build` in `frontend/` once.
+- **Port 8000 (or 5173) is already in use:** an old server is still running. Close its terminal,
+  or find and stop it: `netstat -ano | findstr ":8000 :5173"` then `taskkill /PID <pid> /T /F`.
 
 Command line tools (from `backend/`):
 

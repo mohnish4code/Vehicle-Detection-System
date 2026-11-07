@@ -3,8 +3,8 @@ import { CloudOffIcon, RefreshIcon, TerminalIcon } from "./icons";
 import { btn, CopyButton, cx, Spinner } from "./ui";
 
 const START_BACKEND = [
-  { label: "Windows", command: "cd backend; ..\\venv\\Scripts\\python -m uvicorn app.api.main:app --reload" },
-  { label: "macOS / Linux", command: "cd backend && ../venv/bin/python -m uvicorn app.api.main:app --reload" },
+  { label: "Windows", command: "venv\\Scripts\\uvicorn main:app --reload" },
+  { label: "macOS / Linux", command: "venv/bin/uvicorn main:app --reload" },
 ];
 
 /**
