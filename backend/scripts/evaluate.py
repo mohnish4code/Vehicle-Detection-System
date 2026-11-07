@@ -107,6 +107,8 @@ def main():
     parser.add_argument("--report", help="write the summary, per-category numbers and per-plate results as JSON")
     parser.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                         help="override an [ocr] setting for this run, e.g. --set target_height=100")
+    parser.add_argument("--fail-under", type=float, metavar="RATE",
+                        help="exit with an error if the exact-plate rate is below this (for CI)")
     args = parser.parse_args()
 
     setup_logging("WARNING")
@@ -160,7 +162,7 @@ def main():
                         "accepted": ok, "distance": dist, "seconds": round(secs, 2),
                         "category": row.get("category") or "", "source": row.get("source") or ""})
         mark = "ok " if text == truth else "BAD"
-        status = 'accepted' if ok else 'review'
+        status = "accepted" if ok else "review"
         print(f"[{i:3}/{len(rows)}] {mark} {truth:<12} read {text or '-':<12} {status:<9} {secs:5.1f}s")
 
     n = len(results)
@@ -188,7 +190,8 @@ def main():
     if args.report:
         report = {
             "labels": Path(args.labels).name, "split": args.split or "all", "mode": args.mode,
-            "settings": asdict(pipe.settings.ocr), "detector_confidence": pipe.settings.model.confidence,
+            "settings": asdict(pipe.settings.ocr), "detector_weights": pipe.settings.model.weights,
+            "detector_confidence": pipe.settings.model.confidence,
             "machine": machine, "total_seconds": round(total_secs, 1),
             "summary": s, "by_category": by_category, "by_source": by_source, "results": results,
         }
@@ -201,6 +204,9 @@ def main():
             w = csv.DictWriter(f, fieldnames=list(results[0]))
             w.writeheader()
             w.writerows(results)
+
+    if args.fail_under is not None and s["exact_rate"] < args.fail_under:
+        raise SystemExit(f"exact rate {s['exact_rate']:.1%} is below --fail-under {args.fail_under:.1%}")
 
 
 if __name__ == "__main__":

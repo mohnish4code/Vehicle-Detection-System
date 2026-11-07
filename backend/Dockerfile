@@ -1,4 +1,4 @@
-# Backend: FastAPI + YOLOv8 + EasyOCR (CPU)
+# Backend: FastAPI + YOLOv8 + PaddleOCR via RapidOCR (CPU)
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -21,8 +21,8 @@ RUN pip install -r requirements.txt
 RUN useradd --create-home app
 USER app
 
-# Fetch EasyOCR's weights now so the container doesn't need to download them on start
-RUN python -c "import easyocr; easyocr.Reader(['en'], gpu=False, verbose=False)"
+# The default OCR engine (PP-OCRv4 via RapidOCR) ships its models in the wheel. EasyOCR,
+# if switched on in config.toml, downloads its weights on first start.
 
 COPY --chown=app config.toml .
 COPY --chown=app models/best.pt models/best.pt
