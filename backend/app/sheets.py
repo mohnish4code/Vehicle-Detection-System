@@ -90,6 +90,11 @@ def _to_float(value: str) -> float | None:
         return None
 
 
+def _is_header(row: list[str]) -> bool:
+    # Ours, or the old Streamlit app's "PLATE NUMBER | Timestamp | Image Name"
+    return len(row) > 1 and row[1].strip().lower().startswith("timestamp")
+
+
 def scopes_for(settings: Settings) -> list[str]:
     # With the sheet ID we don't need Drive at all
     return [SHEETS_SCOPE] if settings.sheets.spreadsheet_id else [SHEETS_SCOPE, DRIVE_LOOKUP_SCOPE]
@@ -243,7 +248,7 @@ class SheetsLog:
             age = time.monotonic() - self._rows_at
             if refresh or self._rows is None or age > self.settings.sheets.cache_seconds:
                 values = self._run(ws.get_all_values)
-                if values and [v.strip() for v in values[0][:len(HEADER)]] == HEADER:
+                if values and _is_header(values[0]):
                     values = values[1:]
                 self._rows = [e for e in map(LogEntry.from_row, values) if e]
                 self._rows_at = time.monotonic()

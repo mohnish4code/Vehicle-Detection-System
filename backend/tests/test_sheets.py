@@ -34,6 +34,13 @@ def test_reads_old_rows_without_header(settings):
     assert rows[0].det_conf is None and rows[0].format is None
 
 
+def test_old_streamlit_header_not_read_as_a_plate(settings):
+    ws = FakeWorksheet([["PLATE NUMBER", "Timestamp", "Image Name"],
+                        ["MH12DE1433", "2026-05-02 20:00:00", "streamlit_capture"]])
+    rows = SheetsLog(settings, opener=lambda s: ws).entries()
+    assert [r.plate for r in rows] == ["MH12DE1433"]
+
+
 def test_add_writes_all_columns(sheets, worksheet):
     entry = sheets.add("KL07BZ4455", "camera", 0.91234, 0.8, "standard")
     row = worksheet.rows[-1]
