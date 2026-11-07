@@ -122,7 +122,11 @@ def main():
     for item in args.set:
         key, value = item.split("=", 1)
         current = getattr(pipe.settings.ocr, key)
-        setattr(pipe.settings.ocr, key, value if isinstance(current, str) else type(current)(float(value)))
+        if isinstance(current, list):
+            value = value.split(",")
+        elif not isinstance(current, str):
+            value = type(current)(float(value))
+        setattr(pipe.settings.ocr, key, value)
     pipe.load()
     results = []
     start = time.perf_counter()
