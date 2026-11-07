@@ -20,22 +20,26 @@ function StatusPill({ label, state, detail }: { label: string; state: State; det
   }, [open]);
 
   const dot = { ok: "bg-emerald-500", down: "bg-rose-500", unknown: "bg-slate-300" }[state];
+  const ring = { ok: "ring-emerald-500/30", down: "ring-rose-500/30", unknown: "ring-slate-300/40" }[state];
 
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        className="flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
         aria-expanded={open}
         aria-label={`${label}: ${detail}`}
       >
-        <span className={cx("size-2 rounded-full", dot, state === "unknown" && "animate-pulse")} />
+        <span className={cx("relative flex size-2")}>
+          {state === "ok" && <span className={cx("absolute inline-flex size-full animate-ping rounded-full opacity-40", dot)} />}
+          <span className={cx("relative size-2 rounded-full ring-4", dot, ring, state === "unknown" && "animate-pulse")} />
+        </span>
         {label}
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 shadow-lg">
-          <p className="font-medium text-slate-900">{label}</p>
+        <div className="absolute right-0 top-full z-30 mt-2 w-64 animate-fade-up rounded-xl bg-white p-3 text-sm text-slate-700 shadow-lg ring-1 ring-slate-200">
+          <p className="font-semibold text-slate-900">{label}</p>
           <p className="mt-1">{detail}</p>
         </div>
       )}
@@ -49,7 +53,7 @@ function useStatuses(): Record<"model" | "sheets", [State, string]> {
     return { model: ["unknown", "Checking…"], sheets: ["unknown", "Checking…"] };
   }
   if (!health) {
-    const msg = error ?? "Can't reach the server.";
+    const msg = error ?? "Can't reach the backend.";
     return { model: ["down", msg], sheets: ["down", msg] };
   }
   return {
@@ -60,26 +64,29 @@ function useStatuses(): Record<"model" | "sheets", [State, string]> {
 
 const navLink = ({ isActive }: { isActive: boolean }) =>
   cx(
-    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition",
-    isActive ? "bg-slate-100 text-slate-900" : "text-slate-600 hover:text-slate-900",
+    "flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition",
+    isActive ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
   );
 
 export function Header() {
   const { model, sheets } = useStatuses();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-4 px-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight text-slate-900">
-          <img src="/favicon.svg" alt="" className="size-7" />
-          <span className="hidden min-[380px]:inline">Vehicle Tracker</span>
+    <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/75 backdrop-blur-lg">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
+        <Link to="/" className="group flex items-center gap-2.5">
+          <img src="/favicon.svg" alt="" className="size-8 transition group-hover:rotate-[-6deg]" />
+          <span className="hidden flex-col leading-tight min-[380px]:flex">
+            <span className="text-[15px] font-bold tracking-tight text-slate-900">Vehicle Tracker</span>
+            <span className="text-[11px] font-medium text-slate-500">Number plate recognition</span>
+          </span>
         </Link>
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav className="ml-4 hidden items-center gap-1 sm:flex">
           <NavLink to="/" end className={navLink}>
-            <ScanIcon /> Scan
+            <ScanIcon className="size-4" /> Scan
           </NavLink>
           <NavLink to="/logs" className={navLink}>
-            <ListIcon /> Logs
+            <ListIcon className="size-4" /> Log
           </NavLink>
         </nav>
         <div className="ml-auto flex items-center gap-2">
@@ -94,14 +101,17 @@ export function Header() {
 /** Bottom tab bar on phones, where the top nav is hidden */
 export function MobileNav() {
   const tab = ({ isActive }: { isActive: boolean }) =>
-    cx("flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium", isActive ? "text-slate-900" : "text-slate-500");
+    cx(
+      "flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-semibold transition",
+      isActive ? "text-indigo-600" : "text-slate-500",
+    );
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-slate-200 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg sm:hidden">
       <NavLink to="/" end className={tab}>
         <ScanIcon className="size-6" /> Scan
       </NavLink>
       <NavLink to="/logs" className={tab}>
-        <ListIcon className="size-6" /> Logs
+        <ListIcon className="size-6" /> Log
       </NavLink>
     </nav>
   );

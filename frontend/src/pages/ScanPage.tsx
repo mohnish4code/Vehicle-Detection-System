@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { AlertIcon, CameraIcon, UploadIcon } from "../components/icons";
+import { AlertIcon, CameraIcon, CheckIcon, PlusIcon, SparkIcon } from "../components/icons";
 import { ImageResultView } from "../components/scan/ImageResultView";
 import type { SaveState } from "../components/scan/PlateCard";
 import { ResultsTable } from "../components/scan/ResultsTable";
-import { ScanningCard, UploadPanel } from "../components/scan/UploadPanel";
+import { SamplePicker, ScanningCard, UploadPanel } from "../components/scan/UploadPanel";
 import { btn, Card, cx, EmptyState } from "../components/ui";
 import { useHealth } from "../health";
-import { api, ApiError, isAbort, type ImageResult, type Source } from "../lib/api";
+import { api, ApiError, isAbort, OFFLINE_CODES, type ImageResult, type Source } from "../lib/api";
 import { duration } from "../lib/format";
 import { checkFiles } from "../lib/limits";
 import { normalizePlate, prettyPlate } from "../lib/plate";
@@ -26,13 +26,37 @@ type Phase = "idle" | "scanning" | "done" | "failed";
 let nextId = 0;
 
 const TIPS = [
-  { icon: <CameraIcon />, title: "Get close", text: "The plate should fill a good part of the photo." },
-  { icon: <UploadIcon />, title: "Keep it sharp", text: "Hold still and avoid glare on shiny plates." },
-  { icon: <AlertIcon />, title: "Check before saving", text: "Edit the text if anything looks off." },
+  { icon: <CameraIcon className="size-5" />, title: "Get close", text: "The plate should fill a good part of the photo." },
+  { icon: <SparkIcon className="size-5" />, title: "Keep it sharp", text: "Hold still and avoid glare on shiny plates." },
+  { icon: <CheckIcon className="size-5" />, title: "Check before saving", text: "Unclear reads are flagged so you can fix them." },
 ];
 
+// From backend/benchmark/reports (heldout_e2e.json, benchmark.json)
+const FACTS = ["85% of unseen test plates read exactly", "~1.8 s per photo on a laptop CPU", "Standard & BH series plates"];
+
+function Summary({ items }: { items: ScanItem[] }) {
+  const plates = items.flatMap((i) => i.result?.plates ?? []);
+  const review = plates.filter((p) => p.needs_review || !p.valid).length;
+  const saved = items.reduce((n, i) => n + i.saves.filter((s) => s === "saved").length, 0);
+  const chips = [
+    { label: `${items.length} image${items.length === 1 ? "" : "s"}`, tone: "bg-slate-100 text-slate-700" },
+    { label: `${plates.length} plate${plates.length === 1 ? "" : "s"} found`, tone: "bg-indigo-50 text-indigo-700" },
+    review > 0 && { label: `${review} to check`, tone: "bg-amber-50 text-amber-800" },
+    saved > 0 && { label: `${saved} saved`, tone: "bg-emerald-50 text-emerald-700" },
+  ].filter(Boolean) as { label: string; tone: string }[];
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {chips.map((c) => (
+        <span key={c.label} className={cx("rounded-full px-2.5 py-1 text-xs font-semibold", c.tone)}>
+          {c.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function ScanPage() {
-  const { health, error: healthError } = useHealth();
+  const { health, error: healthError, offline, refresh: refreshHealth } = useHealth();
   const [items, setItems] = useState<ScanItem[]>([]);
   const [phase, setPhase] = useState<Phase>("idle");
   const [failure, setFailure] = useState("");
@@ -97,6 +121,7 @@ export function ScanPage() {
         return;
       }
       const message = e instanceof ApiError ? e.message : "Something went wrong. Please try again.";
+      if (e instanceof ApiError && OFFLINE_CODES.has(e.code)) refreshHealth();
       setFailure(message);
       setPhase("failed");
       toast.error(message);
@@ -145,17 +170,53 @@ export function ScanPage() {
   const current = items.find((i) => i.id === selected) ?? items[0];
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Scan plates</h1>
-        <p className="mt-1 text-sm text-slate-600">Detect number plates in photos and log them to Google Sheets.</p>
-      </div>
+    <div className="space-y-6">
+      {phase === "idle" ? (
+        <div className="animate-fade-up">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700 shadow-sm ring-1 ring-indigo-100">
+            <SparkIcon className="size-3.5" /> YOLOv8 + PaddleOCR
+          </span>
+          <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+            Read Indian number plates{" "}
+            <span className="bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-transparent">in seconds</span>
+          </h1>
+          <p className="mt-2 max-w-2xl text-base text-slate-600">
+            Upload or snap a photo of a vehicle. The plate is found, read, checked against Indian plate formats, and
+            logged to Google Sheets once you confirm it.
+          </p>
+          <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-slate-600">
+            {FACTS.map((f) => (
+              <li key={f} className="flex items-center gap-1.5">
+                <CheckIcon className="size-4 text-emerald-600" /> {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              {phase === "scanning" ? "Scanning" : phase === "failed" ? "Scan failed" : "Results"}
+            </h1>
+            {phase === "done" && (
+              <p className="mt-1 text-sm text-slate-500">
+                Scanned in {duration(totalMs)}. Check each plate, edit if needed, then save it to the log.
+              </p>
+            )}
+          </div>
+          {phase === "done" && (
+            <button type="button" className={cx(btn.base, btn.dark)} onClick={() => setPhase("idle")}>
+              <PlusIcon className="size-4" /> New scan
+            </button>
+          )}
+        </div>
+      )}
 
-      {(modelDown || healthError) && (
-        <div className="flex gap-3 rounded-xl bg-rose-50 p-4 text-sm text-rose-900 ring-1 ring-rose-200" role="alert">
+      {(modelDown || (healthError && !offline)) && (
+        <div className="flex gap-3 rounded-2xl bg-rose-50 p-4 text-sm text-rose-900 ring-1 ring-rose-200" role="alert">
           <AlertIcon className="size-5 shrink-0 text-rose-600" />
           <div>
-            <p className="font-medium">Scanning is unavailable right now</p>
+            <p className="font-semibold">Scanning is unavailable right now</p>
             <p className="mt-0.5">{modelDown ? health?.model.error : healthError}</p>
           </div>
         </div>
@@ -163,13 +224,14 @@ export function ScanPage() {
 
       {phase === "idle" && (
         <>
-          <UploadPanel onFiles={handleFiles} disabled={!!modelDown} />
+          <UploadPanel onFiles={handleFiles} disabled={!!modelDown || offline} />
+          <SamplePicker onFiles={handleFiles} disabled={!!modelDown || offline} />
           <ul className="grid gap-3 sm:grid-cols-3">
             {TIPS.map((tip) => (
-              <li key={tip.title} className="flex gap-3 rounded-xl bg-white p-4 ring-1 ring-slate-200">
-                <span className="text-slate-400">{tip.icon}</span>
+              <li key={tip.title} className="flex gap-3 rounded-2xl bg-white/70 p-4 ring-1 ring-slate-200/80">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-600">{tip.icon}</span>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{tip.title}</p>
+                  <p className="text-sm font-semibold text-slate-900">{tip.title}</p>
                   <p className="text-sm text-slate-500">{tip.text}</p>
                 </div>
               </li>
@@ -178,14 +240,14 @@ export function ScanPage() {
         </>
       )}
 
-      {phase === "scanning" && <ScanningCard count={items.length} onCancel={() => abortRef.current?.abort()} />}
+      {phase === "scanning" && <ScanningCard urls={items.map((i) => i.url)} onCancel={() => abortRef.current?.abort()} />}
 
       {phase === "failed" && (
         <Card>
           <EmptyState
             tone="red"
             icon={<AlertIcon />}
-            title="Scan failed"
+            title="Couldn't scan the images"
             message={failure}
             action={
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -207,14 +269,7 @@ export function ScanPage() {
 
       {phase === "done" && (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-600">
-              {items.length} image{items.length === 1 ? "" : "s"} scanned in {duration(totalMs)}
-            </p>
-            <button type="button" className={cx(btn.base, btn.secondary)} onClick={() => setPhase("idle")}>
-              New scan
-            </button>
-          </div>
+          <Summary items={items} />
 
           {items.length > 1 && (
             <ResultsTable

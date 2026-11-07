@@ -1,7 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-plate: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --animate-fade-up: fade-up 0.35s ease-out both;
+  --animate-scan-beam: scan-beam 1.8s ease-in-out infinite;
+  --animate-soft-pulse: soft-pulse 2s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* the bright line sweeping over a photo while it's being scanned */
+  @keyframes scan-beam {
+    0% {
+      top: 0%;
+    }
+    50% {
+      top: 100%;
+    }
+    100% {
+      top: 0%;
+    }
+  }
+
+  @keyframes soft-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
 }
 
 html {
@@ -10,4 +49,19 @@ html {
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+  /* a soft glow at the top of every page */
+  background-image:
+    radial-gradient(60rem 28rem at 15% -10%, rgb(99 102 241 / 0.10), transparent 70%),
+    radial-gradient(50rem 24rem at 95% -5%, rgb(14 165 233 / 0.10), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

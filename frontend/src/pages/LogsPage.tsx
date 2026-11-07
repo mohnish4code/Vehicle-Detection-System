@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { AlertIcon, CloudOffIcon, DownloadIcon, ListIcon, RefreshIcon, SearchIcon } from "../components/icons";
-import { Badge, btn, Card, cx, EmptyState, Spinner } from "../components/ui";
-import { api, ApiError, isAbort, type LogEntry } from "../lib/api";
+import {
+  AlertIcon,
+  CalendarIcon,
+  ClockIcon,
+  CloudOffIcon,
+  DownloadIcon,
+  ListIcon,
+  PlateIcon,
+  RefreshIcon,
+  SearchIcon,
+} from "../components/icons";
+import { Badge, btn, Card, CopyButton, cx, EmptyState, NumberPlate, Spinner, Stat } from "../components/ui";
+import { api, ApiError, isAbort, OFFLINE_CODES, type LogEntry } from "../lib/api";
 import { downloadCsv } from "../lib/csv";
 import { formatIst, parseIst, percent, todayIso } from "../lib/format";
-import { prettyPlate } from "../lib/plate";
+import { plateFormat } from "../lib/plate";
 
 type Period = "all" | "today" | "7d" | "30d";
 
@@ -34,17 +44,55 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 const select =
-  "rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200";
+  "rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100";
 
-function FormatBadge({ format }: { format: string | null }) {
+function FormatBadge({ format, plate }: { format: string | null; plate: string }) {
+  // rows from the old app have no format column, so work it out from the text
+  format = format ?? plateFormat(plate);
   if (format === "bh") return <Badge tone="blue">BH series</Badge>;
   if (format === "standard") return <Badge>Standard</Badge>;
   return <span className="text-slate-400">–</span>;
 }
 
+const SOURCES: Record<string, string> = { camera: "Camera", upload: "Upload", streamlit_capture: "Old app" };
+
 function SourceLabel({ source }: { source: string }) {
-  const label = source === "camera" ? "Camera" : source === "upload" ? "Upload" : source || "–";
-  return <span className="text-slate-700">{label}</span>;
+  return <span className="text-slate-600">{SOURCES[source] ?? (source || "–")}</span>;
+}
+
+function PlateCell({ plate }: { plate: string }) {
+  return (
+    <span className="group/plate flex items-center gap-1">
+      <NumberPlate text={plate} size="sm" />
+      <CopyButton value={plate} label="Copy plate" className="opacity-0 transition group-hover/plate:opacity-100 focus:opacity-100" />
+    </span>
+  );
+}
+
+function relativeTime(timestamp: string | undefined): string {
+  const t = timestamp ? parseIst(timestamp) : null;
+  if (!t) return "–";
+  const mins = Math.round((Date.now() - t.getTime()) / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours} h ago`;
+  const days = Math.round(hours / 24);
+  return days < 30 ? `${days} day${days === 1 ? "" : "s"} ago` : formatIst(timestamp!).split(",")[0]!;
+}
+
+function Stats({ rows, total }: { rows: LogEntry[]; total: number }) {
+  const today = rows.filter((r) => inPeriod(r, "today")).length;
+  const week = rows.filter((r) => inPeriod(r, "7d")).length;
+  const unique = new Set(rows.map((r) => r.plate)).size;
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <Stat icon={<ListIcon className="size-5" />} label="Plates logged" value={total} hint="all time" />
+      <Stat icon={<CalendarIcon className="size-5" />} label="Today" value={today} hint={`${week} this week`} />
+      <Stat icon={<PlateIcon className="size-5" />} label="Different vehicles" value={unique} hint="unique plates" />
+      <Stat icon={<ClockIcon className="size-5" />} label="Last saved" value={relativeTime(rows[0]?.timestamp)} hint={rows[0] ? rows[0].plate : undefined} />
+    </div>
+  );
 }
 
 export function LogsPage() {
@@ -96,7 +144,17 @@ export function LogsPage() {
   }
 
   let body;
-  if (error) {
+  if (error && OFFLINE_CODES.has(error.code)) {
+    // the banner at the top of the page explains how to start the backend
+    body = (
+      <EmptyState
+        tone="red"
+        icon={<CloudOffIcon />}
+        title="Waiting for the backend"
+        message="The log loads as soon as the backend is running."
+      />
+    );
+  } else if (error) {
     const notSetUp = error.code === "SHEETS_NOT_CONFIGURED";
     body = (
       <EmptyState
@@ -149,20 +207,20 @@ export function LogsPage() {
           {visible.map((r, i) => (
             <li key={`${r.plate}-${r.timestamp}-${i}`} className="flex items-start justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
-                <p className="font-mono text-base font-semibold tracking-wide text-slate-900">{prettyPlate(r.plate)}</p>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <PlateCell plate={r.plate} />
+                <p className="mt-1 text-xs text-slate-500">
                   {formatIst(r.timestamp)} · <SourceLabel source={r.source} />
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <FormatBadge format={r.format} />
+                <FormatBadge format={r.format} plate={r.plate} />
                 <span className="text-xs tabular-nums text-slate-500">OCR {percent(r.ocr_conf)}</span>
               </div>
             </li>
           ))}
         </ul>
         <table className="hidden w-full text-left text-sm md:table">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Plate</th>
               <th className="px-4 py-3">Time (IST)</th>
@@ -174,8 +232,10 @@ export function LogsPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {visible.map((r, i) => (
-              <tr key={`${r.plate}-${r.timestamp}-${i}`} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-mono font-semibold tracking-wide text-slate-900">{prettyPlate(r.plate)}</td>
+              <tr key={`${r.plate}-${r.timestamp}-${i}`} className="transition hover:bg-indigo-50/40">
+                <td className="px-4 py-2.5">
+                  <PlateCell plate={r.plate} />
+                </td>
                 <td className="px-4 py-3 text-slate-700">{formatIst(r.timestamp)}</td>
                 <td className="px-4 py-3">
                   <SourceLabel source={r.source} />
@@ -183,7 +243,7 @@ export function LogsPage() {
                 <td className="px-4 py-3 text-right tabular-nums text-slate-700">{percent(r.det_conf)}</td>
                 <td className="px-4 py-3 text-right tabular-nums text-slate-700">{percent(r.ocr_conf)}</td>
                 <td className="px-4 py-3">
-                  <FormatBadge format={r.format} />
+                  <FormatBadge format={r.format} plate={r.plate} />
                 </td>
               </tr>
             ))}
@@ -197,8 +257,8 @@ export function LogsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Plate log</h1>
-          <p className="mt-1 text-sm text-slate-600">Plates saved to Google Sheets, newest first.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Plate log</h1>
+          <p className="mt-1 text-sm text-slate-600">Every plate saved to Google Sheets, newest first.</p>
         </div>
         <div className="flex gap-2">
           <button type="button" className={cx(btn.base, btn.secondary)} onClick={refresh} disabled={loading}>
@@ -215,6 +275,8 @@ export function LogsPage() {
           </button>
         </div>
       </div>
+
+      {!error && rows.length > 0 && !filtered && <Stats rows={rows} total={total} />}
 
       <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
         <label className="relative">

@@ -20,15 +20,16 @@ web app, so you can scan plates straight from a phone camera.
 - **Two-row plates** (bikes, autos, trucks) are read top to bottom as one plate
 - **Review before saving** – unclear reads are flagged and the text can be edited
 - **Google Sheets log** with duplicate protection, retries and clear error messages
-- **Web app** – drag-and-drop or phone camera (JPEG, PNG, WebP, iPhone HEIC), several images at once,
-  boxes drawn on the image, searchable log with CSV export
+- **Web app** – drag-and-drop or phone camera (JPEG, PNG, WebP, iPhone HEIC), one-click sample photos,
+  several images at once, boxes drawn on the image (hover a plate to highlight it), plates shown as
+  real number plates, searchable log with stats, copy-to-clipboard and CSV export
 
 | Phone | Log |
 |---|---|
 | <img src="docs/screenshots/scan-mobile.png" width="260"> | <img src="docs/screenshots/logs-desktop.png" width="520"> |
 
-*Screenshots are from a real run on `backend/test_images/` before Google Sheets was connected,
-which is why saving is disabled there.*
+*Screenshots are from a real run of the app on the three sample photos in `backend/test_images/`,
+which the Scan page also offers as one-click samples.*
 
 ## Accuracy
 
@@ -188,6 +189,14 @@ npm run dev
 ```
 
 Open http://localhost:5173. Vite forwards `/api` to the backend on port 8000.
+
+**If the page says the backend isn't running** or "Port 5173 is already in use":
+
+- The backend terminal must show `Application startup complete` (the first start takes ~10–20 s).
+  The page reconnects by itself once it does.
+- Another dev server is still holding a port. Close the old terminal, or find and stop it:
+  `netstat -ano | findstr ":5173 :8000"` then `taskkill /PID <pid> /T /F`.
+  The frontend refuses to start on another port on purpose, so you never end up on a stale page.
 
 To use the phone camera during development, run `npm run dev -- --host` and open the
 network URL it prints on your phone (same Wi-Fi).
