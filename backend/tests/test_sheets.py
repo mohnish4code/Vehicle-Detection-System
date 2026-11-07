@@ -4,8 +4,17 @@ import pytest
 import requests
 
 import app.sheets as sheets_module
-from app.sheets import (DRIVE_LOOKUP_SCOPE, HEADER, IST, SHEETS_SCOPE, TIME_FORMAT, DuplicatePlate, SheetsError,
-                        SheetsLog, scopes_for)
+from app.sheets import (
+    DRIVE_LOOKUP_SCOPE,
+    HEADER,
+    IST,
+    SHEETS_SCOPE,
+    TIME_FORMAT,
+    DuplicatePlate,
+    SheetsError,
+    SheetsLog,
+    scopes_for,
+)
 
 from .conftest import FakeWorksheet, api_error, not_configured
 

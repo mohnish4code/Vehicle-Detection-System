@@ -139,7 +139,8 @@ def main():
     print(f"\nbest: {best['engines']}, early_stop {best['early_stop_confidence']}")
     print("review thresholds (min_confidence, max_fixes) -> wrong+ok / correct-but-flagged:")
     for t in tradeoff:
-        print(f"  {t['min_confidence']:.1f} {t['max_fixes']}  ->  {t['wrong_not_flagged']:2} / {t['correct_but_flagged']:2}")
+        print(f"  {t['min_confidence']:.1f} {t['max_fixes']}  ->  "
+              f"{t['wrong_not_flagged']:2} / {t['correct_but_flagged']:2}")
 
     Path(args.report).parent.mkdir(parents=True, exist_ok=True)
     Path(args.report).write_text(json.dumps({

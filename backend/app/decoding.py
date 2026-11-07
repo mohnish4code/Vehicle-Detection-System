@@ -136,15 +136,9 @@ def decode_plate(probs: np.ndarray, alphabet: str, beam_width: int = 32, top_k: 
         cand = np.argpartition(-frame[1:], top_k)[:top_k] + 1 if len(alphabet) > top_k else range(1, len(alphabet) + 1)
         nxt: dict[str, list] = {}
 
-        def entry(prefix, states):
-            e = nxt.get(prefix)
-            if e is None:
-                e = nxt[prefix] = [NEG_INF, NEG_INF, states]
-            return e
-
         for prefix, (lb, lnb, states) in beams.items():
             total = _logadd(lb, lnb)
-            e = entry(prefix, states)
+            e = nxt.setdefault(prefix, [NEG_INF, NEG_INF, states])
             e[0] = _logadd(e[0], total + frame[0])  # blank
             if prefix:  # same char continues, no new character
                 last_idx = alphabet.index(prefix[-1]) + 1
@@ -157,7 +151,7 @@ def decode_plate(probs: np.ndarray, alphabet: str, beam_width: int = 32, top_k: 
                     continue
                 # a repeated character needs a blank in between
                 p = (lb if prefix and prefix[-1] == ch else total) + frame[idx]
-                e2 = entry(prefix + ch, new_states)
+                e2 = nxt.setdefault(prefix + ch, [NEG_INF, NEG_INF, new_states])
                 e2[1] = _logadd(e2[1], p)
 
         beams = dict(sorted(nxt.items(), key=lambda kv: -_logadd(kv[1][0], kv[1][1]))[:beam_width])

@@ -399,7 +399,7 @@ class PlatePipeline:
 
         boxes = self.model(image, conf=cfg.model.confidence, verbose=False)[0].boxes
         plates = []
-        for xyxy, conf in zip(boxes.xyxy.tolist(), boxes.conf.tolist()):
+        for xyxy, conf in zip(boxes.xyxy.tolist(), boxes.conf.tolist(), strict=True):
             x1, y1, x2, y2 = (int(v) for v in xyxy)
             crop = self.crop_plate(image, (x1, y1, x2, y2))
             if crop.size == 0:

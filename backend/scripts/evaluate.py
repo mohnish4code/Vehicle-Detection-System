@@ -97,7 +97,8 @@ def summarize(results: list[dict]) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Evaluate plate reading accuracy")
     parser.add_argument("--labels", default=str(ROOT / "benchmark" / "dataset_plates.csv"))
-    parser.add_argument("--root", default=str(ROOT.parent / "data" / "archive"), help="folder the image paths are relative to")
+    parser.add_argument("--root", default=str(ROOT.parent / "data" / "archive"),
+                        help="folder the image paths are relative to")
     parser.add_argument("--mode", choices=["ocr", "e2e"], default="ocr")
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--out", help="write per-plate results to this CSV")
@@ -158,7 +159,8 @@ def main():
                         "accepted": ok, "distance": dist, "seconds": round(secs, 2),
                         "category": row.get("category") or "", "source": row.get("source") or ""})
         mark = "ok " if text == truth else "BAD"
-        print(f"[{i:3}/{len(rows)}] {mark} {truth:<12} read {text or '-':<12} {'accepted' if ok else 'review':<9} {secs:5.1f}s")
+        status = 'accepted' if ok else 'review'
+        print(f"[{i:3}/{len(rows)}] {mark} {truth:<12} read {text or '-':<12} {status:<9} {secs:5.1f}s")
 
     n = len(results)
     if not n:

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from app.decoding import decode_plate, greedy, layout_prior, step, START, accepting
+from app.decoding import START, accepting, decode_plate, greedy, layout_prior, step
 
 ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 

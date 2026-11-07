@@ -1,0 +1,11 @@
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "I", "UP"]
+ignore = [
+    "B008",  # FastAPI's File(...) / Query(...) defaults are meant to be called there
+]
+
+[lint.isort]
+known-first-party = ["app", "scripts", "tests"]
