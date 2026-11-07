@@ -1,0 +1,841 @@
+{
+  "labels": "dataset_plates.csv",
+  "split": "all",
+  "mode": "e2e",
+  "settings": {
+    "languages": [
+      "en"
+    ],
+    "gpu": false,
+    "crop_padding": 4,
+    "crop_padding_ratio": 0.15,
+    "upscale": 2,
+    "target_height": 140,
+    "min_confidence": 0.5,
+    "max_fixes": 2,
+    "early_stop_confidence": 0.9,
+    "decoder": "constrained",
+    "ignore_words": [
+      "IND",
+      "INDIA"
+    ]
+  },
+  "detector_confidence": 0.25,
+  "machine": {
+    "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+    "logical_cpus": 4,
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.4",
+    "git_commit": "9f78fa5",
+    "date": "2026-11-07T17:34:27"
+  },
+  "total_seconds": 231.4,
+  "summary": {
+    "plates": 76,
+    "exact": 54,
+    "exact_rate": 0.7105,
+    "cer": 0.0609,
+    "accepted": 41,
+    "accepted_correct": 37,
+    "wrong_not_flagged": 4,
+    "correct_but_flagged": 17,
+    "seconds_mean": 3.04
+  },
+  "by_category": {
+    "small": {
+      "plates": 33,
+      "exact": 23,
+      "exact_rate": 0.697,
+      "cer": 0.0719,
+      "accepted": 15,
+      "accepted_correct": 14,
+      "wrong_not_flagged": 1,
+      "correct_but_flagged": 9,
+      "seconds_mean": 3.18
+    },
+    "standard": {
+      "plates": 40,
+      "exact": 29,
+      "exact_rate": 0.725,
+      "cer": 0.0538,
+      "accepted": 23,
+      "accepted_correct": 21,
+      "wrong_not_flagged": 2,
+      "correct_but_flagged": 8,
+      "seconds_mean": 2.97
+    },
+    "two_row": {
+      "plates": 3,
+      "exact": 2,
+      "exact_rate": 0.6667,
+      "cer": 0.0345,
+      "accepted": 3,
+      "accepted_correct": 2,
+      "wrong_not_flagged": 1,
+      "correct_but_flagged": 0,
+      "seconds_mean": 2.44
+    }
+  },
+  "results": [
+    {
+      "image": "images/train/HP12.jpg",
+      "truth": "HP36E3330",
+      "read": "HP36E3330",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 1.97,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/MH3.jpg",
+      "truth": "MH48AC6244",
+      "read": "MH69AC6264",
+      "correct": false,
+      "accepted": false,
+      "distance": 3,
+      "seconds": 3.24,
+      "category": "small"
+    },
+    {
+      "image": "images/train/59e121dc-ebc6-4e4c-ba88-7fe04b569218___Autopsyches-Skoda-Laura-6.jpg.jpg",
+      "truth": "DL3CAY2231",
+      "read": "DL3CAY2231",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 0.9,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/8b9e7112-9149-48fb-b8e8-c3e89cce5af0___1074650_10201043987997310_227646612_o.jpg.jpg",
+      "truth": "HR696969",
+      "read": "HR696969",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 1.72,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/6ec9d264-9eab-4027-bdcc-6f71c842ee75___3e7fd381-0ae5-4421-8a70-279ee0ec1c61_846635891_1_1080x720_nissan-terrano-xl-d-thp-110-ps-2013-diesel-dehra-dun.jpg",
+      "truth": "UK07BA7252",
+      "read": "UK07BA7252",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.62,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/WB2.jpg",
+      "truth": "WB02M8447",
+      "read": "WB02M8447",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.1,
+      "category": "small"
+    },
+    {
+      "image": "images/train/422aaf6f-dd4a-450f-ac6b-65966ab512d0___1431956d1446017445-number-plates-merchandise-canvas-ink-gurgaon-edit-closed-thumb_img_4418_1024.jpg.jpg",
+      "truth": "MH03BS7778",
+      "read": "MH3BS7778",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.68,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/ab573806-1da7-4ccf-93c8-6082e0cc15c3___1107433d1373284570-my-modded-skoda-rapid-now-166-bhp-351-nm-119-whp-per-tonne-hdr_00005_normal.jpg.jpg",
+      "truth": "TN07BU5427",
+      "read": "TN07BU5427",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.95,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/OD26.jpg",
+      "truth": "OD021481",
+      "read": "OD021481",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 0.72,
+      "category": "small"
+    },
+    {
+      "image": "images/train/MP2.jpg",
+      "truth": "MP04CL8840",
+      "read": "MP1LCL8840",
+      "correct": false,
+      "accepted": false,
+      "distance": 2,
+      "seconds": 2.79,
+      "category": "small"
+    },
+    {
+      "image": "images/train/cf011553-f802-4b11-99ec-6e03d731b646___new_2014-VW-Polo-facelift-spied-India-rear.jpg.jpg",
+      "truth": "MH14TCF460",
+      "read": "MH14TCF460",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 9.7,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/aff1f53b-3259-44f0-9718-05fb64dc8ba1___Untitled.jpg",
+      "truth": "KA03NA8385",
+      "read": "KA03NA8385",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 4.56,
+      "category": "small"
+    },
+    {
+      "image": "images/train/6f78077e-a3a1-4fb9-89ba-5870d75ccdb8___Innova_Crysta_Car_Euro_number_Plates.jpg.jpg",
+      "truth": "TN09CH7770",
+      "read": "TN09CH7770",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.31,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/car-wbs-TN21AT0492_00000.jpg",
+      "truth": "TN21AT0492",
+      "read": "TN21AT0493",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.69,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/MH8.jpg",
+      "truth": "MH02DN7410",
+      "read": "MH02DN7410",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 4.66,
+      "category": "small"
+    },
+    {
+      "image": "images/train/5b49ae32-c799-45e3-b139-9c56acf6370d___2014-Volkswagen-Polo-Review.jpg.jpg",
+      "truth": "MH14EH7958",
+      "read": "MH14EH7958",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.95,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/581e2224-3640-4bad-9d90-c2076a9f64f4___617609.jpg.jpg",
+      "truth": "KA03MX5058",
+      "read": "KA03MX5058",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 1.65,
+      "category": "small"
+    },
+    {
+      "image": "images/train/b78259be-7ef5-4499-b9a2-2b8a37660e8b___Maruti-Suzuki-Celerio-Front-Number-Plates-Design.jpg.jpg",
+      "truth": "KL10AW2814",
+      "read": "KL10AH2814",
+      "correct": false,
+      "accepted": true,
+      "distance": 1,
+      "seconds": 1.11,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/e82fc408-a209-4221-9f6d-742b4b9d4c70___3e7fd381-0ae5-4421-8a70-279ee0ec1c61_848803268_2_1080x720_nissan-terrano-xl-d-plus-2014-diesel-upload-photos.jpg",
+      "truth": "UP32FH2653",
+      "read": "UP32FH2653",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 0.88,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/MP4.jpg",
+      "truth": "MP09CK4943",
+      "read": "HR69CK4943",
+      "correct": false,
+      "accepted": false,
+      "distance": 3,
+      "seconds": 2.76,
+      "category": "small"
+    },
+    {
+      "image": "images/train/AR9.jpg",
+      "truth": "AR01E1034",
+      "read": "AR01E1034",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.48,
+      "category": "small"
+    },
+    {
+      "image": "images/train/GA8.jpg",
+      "truth": "GA05B5077",
+      "read": "GA05E5077",
+      "correct": false,
+      "accepted": true,
+      "distance": 1,
+      "seconds": 1.75,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/car-wbs-KL01CA2555_00000.jpg",
+      "truth": "KL01CA2555",
+      "read": "KL01CA2555",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.51,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/AP27.jpg",
+      "truth": "AP31EF1155",
+      "read": "AP31EF1155",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.0,
+      "category": "small"
+    },
+    {
+      "image": "images/train/car-wbs-KL20K7561_00000.jpg",
+      "truth": "KL20K7561",
+      "read": "KL20K7651",
+      "correct": false,
+      "accepted": false,
+      "distance": 2,
+      "seconds": 3.06,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/KA19.jpg",
+      "truth": "KA03MQ6984",
+      "read": "KA03LD6984",
+      "correct": false,
+      "accepted": false,
+      "distance": 2,
+      "seconds": 2.42,
+      "category": "small"
+    },
+    {
+      "image": "images/train/760ba77a-8992-4574-8cba-6c081d9e3e19___3e7fd381-0ae5-4421-8a70-279ee0ec1c61_04f4c639c871fba0b4cc6475604e40b7_large.jpg",
+      "truth": "RJ02CC0784",
+      "read": "RJ02CC0784",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.34,
+      "category": "small"
+    },
+    {
+      "image": "images/train/7070d6ac-5425-4d33-a78e-a48c62d0fac5___Honda-Jazz-Number-Plate-Designs.jpg.jpg",
+      "truth": "TN42R2697",
+      "read": "TN42R2697",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 0.83,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/car-wbs-MH14EU3498_00000.jpg",
+      "truth": "MH14EU3498",
+      "read": "MH14EU3428",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 3.24,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/UP21.jpg",
+      "truth": "UP52AH9705",
+      "read": "UP52AH9705",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.15,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/GJ2.jpg",
+      "truth": "GJ15CB3980",
+      "read": "GJ15CB3980",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.08,
+      "category": "small"
+    },
+    {
+      "image": "images/train/PY16.jpg",
+      "truth": "PY01BU2406",
+      "read": "PY01BU2408",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.94,
+      "category": "small"
+    },
+    {
+      "image": "images/train/car-wbs-KA51MJ8156_00000.jpg",
+      "truth": "KA51MJ8156",
+      "read": "KA51MJ8156",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.93,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/CG15.jpg",
+      "truth": "CG07BR3255",
+      "read": "CG07BR3255",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 2.44,
+      "category": "small"
+    },
+    {
+      "image": "images/train/a2d49f53-4121-4627-b5d9-069f8b2f8490___840256171_1_1080x720_maruti-suzuki-wagon-r-vxi-with-abs-minor-2014-petrol-erode.jpg.jpg",
+      "truth": "TN38BY4191",
+      "read": "TN38BYL191",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 3.66,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/fbc107b7-13d8-4a2d-b8be-7c96bd7d609c___new_9214a754343030395508e104d7948167_large.jpg.jpg",
+      "truth": "PB08CX2959",
+      "read": "PB08CX2959",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.4,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/HR9.jpg",
+      "truth": "HR29AS0015",
+      "read": "HR29AS0015",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.74,
+      "category": "small"
+    },
+    {
+      "image": "images/train/PB7.jpg",
+      "truth": "PB10DV5354",
+      "read": "PB70DV5354",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.63,
+      "category": "small"
+    },
+    {
+      "image": "images/train/e719f39b-e8dd-4fe0-9a41-71123932a486___226676869_4_1000x700_maruti-suzuki-wagon-r-duo-petrol-120000-kms-2007-year-cars_rev001.jpg.jpg",
+      "truth": "KL07BF5000",
+      "read": "KL07BF5000",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 5.47,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/8c4371ee-a997-4b21-82c4-cb5e767c4d06___kia-sorento-spied-in-India.jpg.jpg",
+      "truth": "AP02BP2454",
+      "read": "AP02BP2454",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.38,
+      "category": "small"
+    },
+    {
+      "image": "images/train/WB3.jpg",
+      "truth": "WB70G3763",
+      "read": "WB70G3763",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.33,
+      "category": "small"
+    },
+    {
+      "image": "images/train/car-wbs-HR26BP3543_00000.jpg",
+      "truth": "HR26BP3543",
+      "read": "HR26BP3543",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 0.95,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/HR6.jpg",
+      "truth": "HR26DJ8832",
+      "read": "HR26DJ8832",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 4.52,
+      "category": "small"
+    },
+    {
+      "image": "images/train/94c5a151-24b5-493c-a900-017a4353b00c___3e7fd381-0ae5-4421-8a70-279ee0ec1c61_Tata-Tiago-Front-Number-Plates-Design.jpg",
+      "truth": "KL65H4383",
+      "read": "KL65H4383",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.73,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/GJ18.jpg",
+      "truth": "GJ01RN4259",
+      "read": "GJ01RM4259",
+      "correct": false,
+      "accepted": true,
+      "distance": 1,
+      "seconds": 4.94,
+      "category": "small"
+    },
+    {
+      "image": "images/train/HR22.jpg",
+      "truth": "HR09G8378",
+      "read": "HR40G3378",
+      "correct": false,
+      "accepted": false,
+      "distance": 3,
+      "seconds": 3.32,
+      "category": "small"
+    },
+    {
+      "image": "images/train/UP22.jpg",
+      "truth": "UP11AY0646",
+      "read": "UP11AY0646",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.81,
+      "category": "small"
+    },
+    {
+      "image": "images/train/PY5.jpg",
+      "truth": "PY01AW2814",
+      "read": "PY01AW2814",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.18,
+      "category": "small"
+    },
+    {
+      "image": "images/train/TR10.jpg",
+      "truth": "TR07D0569",
+      "read": "TR07D0569",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.31,
+      "category": "small"
+    },
+    {
+      "image": "images/train/7c6227ed-9e92-4062-9591-b172cb32ec10___3e7fd381-0ae5-4421-8a70-279ee0ec1c61_Honda-Jazz-Front-Number-Plates-Designs.jpg",
+      "truth": "TN42R2697",
+      "read": "TN42R2697",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 4.44,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/712ecd95-753f-4d67-ae42-e8b5254e6e94___28iam53.jpg.jpg",
+      "truth": "MH02BK9793",
+      "read": "MH92BK9793",
+      "correct": false,
+      "accepted": true,
+      "distance": 1,
+      "seconds": 2.45,
+      "category": "two_row"
+    },
+    {
+      "image": "images/train/GJ10.jpg",
+      "truth": "GJ01RA8370",
+      "read": "GJ191821",
+      "correct": false,
+      "accepted": false,
+      "distance": 6,
+      "seconds": 2.76,
+      "category": "small"
+    },
+    {
+      "image": "images/train/e29b6eea-504a-4da2-8503-5bd3443f3bd8___maruti-suzuki-wagon-r-front-left-rim.jpg.jpg",
+      "truth": "KA04ME9869",
+      "read": "KA04ME9869",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.26,
+      "category": "two_row"
+    },
+    {
+      "image": "images/train/MH10.jpg",
+      "truth": "MH11CQ8516",
+      "read": "MH11CQ8516",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.94,
+      "category": "small"
+    },
+    {
+      "image": "images/train/JH15.jpg",
+      "truth": "JH08C0625",
+      "read": "JH08C0625",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.7,
+      "category": "small"
+    },
+    {
+      "image": "images/train/RJ9.jpg",
+      "truth": "RJ20UB0137",
+      "read": "RJ20UB0137",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.57,
+      "category": "small"
+    },
+    {
+      "image": "images/train/JK14.jpg",
+      "truth": "JK11D8143",
+      "read": "JK11D8143",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.5,
+      "category": "small"
+    },
+    {
+      "image": "images/train/car-wbs-HR26CK8571_00000.jpg",
+      "truth": "HR26CK8571",
+      "read": "HR26CK8571",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.3,
+      "category": "small"
+    },
+    {
+      "image": "images/train/AR7.jpg",
+      "truth": "AR02A7116",
+      "read": "AR02A7116",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.37,
+      "category": "small"
+    },
+    {
+      "image": "images/train/UP16.jpg",
+      "truth": "UP32KW7325",
+      "read": "UP32KL7325",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.51,
+      "category": "small"
+    },
+    {
+      "image": "images/train/6f680368-4a15-464a-b314-7f9cd0f3db11___91852d1232463201-high-security-registration-plates-hsrp-india-num1.jpg.jpg",
+      "truth": "KL01AU585",
+      "read": "KL01AU585",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 1.61,
+      "category": "two_row"
+    },
+    {
+      "image": "images/train/car-wbs-MH46X9996_00000.jpg",
+      "truth": "MH46X9996",
+      "read": "MH46X9996",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 3.96,
+      "category": "standard"
+    },
+    {
+      "image": "images/train/e706cec0-783a-42bc-b934-64788481cd92___4-Innova-After-2.jpg.jpg",
+      "truth": "MH04DW8351",
+      "read": "MH4DH8351",
+      "correct": false,
+      "accepted": false,
+      "distance": 2,
+      "seconds": 5.54,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video4_3860.jpg",
+      "truth": "MH02DW8021",
+      "read": "MH02DV8021",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.88,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video5_0.jpg",
+      "truth": "MH01BY7658",
+      "read": "MH01BY7658",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.09,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video5_1830.jpg",
+      "truth": "MH01CY6333",
+      "read": "MH01CV6333",
+      "correct": false,
+      "accepted": false,
+      "distance": 1,
+      "seconds": 2.73,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video5_480.jpg",
+      "truth": "MH03CS6266",
+      "read": "MH03CS6266",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 1.83,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video6_920.jpg",
+      "truth": "MH02DS9365",
+      "read": "MH02DS9365",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.91,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video8_0.jpg",
+      "truth": "MH02CD3654",
+      "read": "MH02CD3654",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.08,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video8_1340.jpg",
+      "truth": "MH01BG7161",
+      "read": "MH01BG7161",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 2.16,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video8_1520.jpg",
+      "truth": "MH47Q5851",
+      "read": "MH47Q5851",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.56,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video8_2100.jpg",
+      "truth": "MH02CR8276",
+      "read": "KL47",
+      "correct": false,
+      "accepted": false,
+      "distance": 9,
+      "seconds": 2.5,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video8_870.jpg",
+      "truth": "MH01BT0050",
+      "read": "MH01BT0050",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.73,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video9_100.jpg",
+      "truth": "MH01DT1917",
+      "read": "MH01DT1917",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 3.77,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video9_350.jpg",
+      "truth": "MH02FN2783",
+      "read": "MH02FN2783",
+      "correct": true,
+      "accepted": false,
+      "distance": 0,
+      "seconds": 2.91,
+      "category": "standard"
+    },
+    {
+      "image": "images/val/video_15.jpg",
+      "truth": "MH01CP2655",
+      "read": "MH01CP2655",
+      "correct": true,
+      "accepted": true,
+      "distance": 0,
+      "seconds": 2.46,
+      "category": "standard"
+    }
+  ]
+}

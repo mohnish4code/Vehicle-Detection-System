@@ -1,8 +1,0 @@
-streamlit
-ultralytics
-easyocr==1.7.2
-numpy==1.26.4
-gspread
-oauth2client
-pytz
-opencv-python-headless==4.8.1.78

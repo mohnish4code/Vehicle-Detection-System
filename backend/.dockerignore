@@ -1,0 +1,10 @@
+tests
+test_images
+scripts
+**/__pycache__
+**/*.pyc
+.pytest_cache
+**/*credentials*.json
+**/service-account*.json
+.env
+.env.*

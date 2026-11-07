@@ -1,0 +1,23 @@
+ultralytics==8.4.41
+torch==2.11.0
+torchvision==0.26.0
+easyocr==1.7.2
+# PP-OCRv4 text detection + recognition on onnxruntime ([ocr] engines = "paddle")
+rapidocr-onnxruntime==1.4.4
+onnxruntime==1.31.1
+numpy==1.26.4
+# ultralytics pulls in opencv-python and easyocr pulls in the headless build.
+# Both install the same cv2 module, so keep them on the same version.
+opencv-python==4.11.0.86
+opencv-python-headless==4.11.0.86
+# HEIC photos from iPhones
+pillow-heif==1.8.1
+gspread==6.2.1
+google-auth==2.50.0
+requests==2.33.1
+tzdata==2026.2
+fastapi==0.162.0
+starlette==1.0.0
+pydantic==2.14.2
+uvicorn[standard]==0.46.0
+python-multipart==0.0.27

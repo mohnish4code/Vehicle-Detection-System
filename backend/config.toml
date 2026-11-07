@@ -1,0 +1,64 @@
+# Default settings. Any value can be overridden with an environment variable
+# named VDS_<SECTION>_<KEY>, e.g. VDS_MODEL_CONFIDENCE=0.4
+
+[model]
+weights = "models/best.pt"
+confidence = 0.25
+# Copies of the detector + OCR kept in memory; that many images are read at the same
+# time (also the images of one request). Each copy adds a few hundred MB of RAM.
+instances = 1
+
+[ocr]
+languages = ["en"]
+gpu = false
+# "constrained" reads the text straight from the OCR's character probabilities and
+# only allows valid plates; "classic" fixes look-alike characters afterwards.
+decoder = "constrained"
+# OCR engines, in order: "paddle" (PP-OCRv4 via RapidOCR) and/or "easyocr". Every variant
+# they read votes. On the dev set (scripts/tune.py, reports/tuning.json) paddle alone read
+# 69/76 plates vs 55/76 for easyocr; both together also read 69 but were slower.
+engines = ["paddle"]
+# Margin added around the detected box: crop_padding_ratio of the box size,
+# but at least crop_padding pixels. YOLO boxes often clip the last character.
+crop_padding = 4
+crop_padding_ratio = 0.15
+# Every crop is resized to about this height before OCR (0 = use upscale instead).
+# Values tried on benchmark/dataset_plates.csv: 72, 100, 140 - 140 read the most plates.
+target_height = 140
+upscale = 2
+# Reads below this confidence, or needing more corrections than max_fixes,
+# are marked "needs review" even if the format is valid. 0.9 was picked on the dev
+# set to keep wrong-but-accepted reads near zero (1 of 76, at the cost of flagging
+# 19 correct reads); 0.5 accepted 3 wrong ones. See review_tradeoff in reports/tuning.json.
+min_confidence = 0.9
+max_fixes = 2
+# Skip the remaining preprocessing variants once a read is valid, needs no
+# fixes and is at least this confident. Set to 1.1 to always run all of them.
+early_stop_confidence = 0.9
+# Text OCR picks up on plates that isn't part of the number
+ignore_words = ["IND", "INDIA"]
+
+[api]
+# Frontend URLs allowed to call the API from the browser
+cors_origins = ["http://localhost:5173"]
+max_files = 10
+max_file_mb = 10
+# Rejects absurdly large images (e.g. 10000x10000) before running the model
+max_image_megapixels = 40
+
+[sheets]
+# The sheet is found by its name. The service account must have Editor access to it.
+spreadsheet_name = "Vehicle_Tracking_System"
+# Optional: the long ID from the sheet URL (docs.google.com/spreadsheets/d/<ID>/edit).
+# If set it's used instead of the name, and the app then needs no Drive access at all.
+spreadsheet_id = ""
+# Leave empty to use the first tab
+worksheet = ""
+# Service account key. GOOGLE_CREDENTIALS / GOOGLE_APPLICATION_CREDENTIALS env vars win over this.
+credentials_file = "../secrets/credentials.json"
+# Refuse to log the same plate again within this many minutes
+dedupe_minutes = 10
+retries = 3
+retry_base_seconds = 1.0
+# Rows are cached this long between reads to stay under the API quota
+cache_seconds = 15

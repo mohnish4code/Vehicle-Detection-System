@@ -1,0 +1,169 @@
+{
+  "runs": [
+    {
+      "label": "easyocr_pt",
+      "weights": "models/best.pt",
+      "engines": [
+        "easyocr"
+      ],
+      "images": [
+        "testing 1.png",
+        "testing 2.png",
+        "testing 3.png"
+      ],
+      "repeat": 5,
+      "load_seconds": 109.0,
+      "latency_ms": {
+        "mean": 4333.4,
+        "p50": 3724.3,
+        "p95": 10857.3
+      },
+      "throughput": {
+        "instances": 1,
+        "concurrency": 1,
+        "images": 15,
+        "images_per_second": 0.34
+      },
+      "machine": {
+        "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+        "logical_cpus": 4,
+        "platform": "Windows-11-10.0.26300-SP0",
+        "python": "3.12.4",
+        "git_commit": "63722fd",
+        "date": "2026-11-07T18:54:49"
+      }
+    },
+    {
+      "label": "paddle_pt",
+      "weights": "models/best.pt",
+      "engines": [
+        "paddle"
+      ],
+      "images": [
+        "testing 1.png",
+        "testing 2.png",
+        "testing 3.png"
+      ],
+      "repeat": 5,
+      "load_seconds": 19.7,
+      "latency_ms": {
+        "mean": 1813.7,
+        "p50": 1360.2,
+        "p95": 3031.3
+      },
+      "throughput": {
+        "instances": 1,
+        "concurrency": 1,
+        "images": 15,
+        "images_per_second": 0.57
+      },
+      "machine": {
+        "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+        "logical_cpus": 4,
+        "platform": "Windows-11-10.0.26300-SP0",
+        "python": "3.12.4",
+        "git_commit": "63722fd",
+        "date": "2026-11-07T18:56:15"
+      }
+    },
+    {
+      "label": "paddle_onnx",
+      "weights": "models/best.onnx",
+      "engines": [
+        "paddle"
+      ],
+      "images": [
+        "testing 1.png",
+        "testing 2.png",
+        "testing 3.png"
+      ],
+      "repeat": 5,
+      "load_seconds": 12.1,
+      "latency_ms": {
+        "mean": 1913.8,
+        "p50": 1406.4,
+        "p95": 3173.3
+      },
+      "throughput": {
+        "instances": 1,
+        "concurrency": 1,
+        "images": 15,
+        "images_per_second": 0.52
+      },
+      "machine": {
+        "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+        "logical_cpus": 4,
+        "platform": "Windows-11-10.0.26300-SP0",
+        "python": "3.12.4",
+        "git_commit": "63722fd",
+        "date": "2026-11-07T18:57:37"
+      }
+    },
+    {
+      "label": "paddle_pt_2inst_conc4",
+      "weights": "models/best.pt",
+      "engines": [
+        "paddle"
+      ],
+      "images": [
+        "testing 1.png",
+        "testing 2.png",
+        "testing 3.png"
+      ],
+      "repeat": 5,
+      "load_seconds": 14.6,
+      "latency_ms": {
+        "mean": 2018.5,
+        "p50": 1393.7,
+        "p95": 3958.8
+      },
+      "throughput": {
+        "instances": 2,
+        "concurrency": 4,
+        "images": 15,
+        "images_per_second": 0.5
+      },
+      "machine": {
+        "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+        "logical_cpus": 4,
+        "platform": "Windows-11-10.0.26300-SP0",
+        "python": "3.12.4",
+        "git_commit": "6c7404a",
+        "date": "2026-11-07T18:59:04"
+      }
+    },
+    {
+      "label": "paddle_pt_1inst_conc4",
+      "weights": "models/best.pt",
+      "engines": [
+        "paddle"
+      ],
+      "images": [
+        "testing 1.png",
+        "testing 2.png",
+        "testing 3.png"
+      ],
+      "repeat": 5,
+      "load_seconds": 9.5,
+      "latency_ms": {
+        "mean": 1848.2,
+        "p50": 1431.2,
+        "p95": 3069.0
+      },
+      "throughput": {
+        "instances": 1,
+        "concurrency": 4,
+        "images": 15,
+        "images_per_second": 0.55
+      },
+      "machine": {
+        "cpu": "11th Gen Intel(R) Core(TM) i3-1115G4 @ 3.00GHz",
+        "logical_cpus": 4,
+        "platform": "Windows-11-10.0.26300-SP0",
+        "python": "3.12.4",
+        "git_commit": "6c7404a",
+        "date": "2026-11-07T19:00:20"
+      }
+    }
+  ]
+}
