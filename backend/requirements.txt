@@ -10,6 +10,8 @@ numpy==1.26.4
 # Both install the same cv2 module, so keep them on the same version.
 opencv-python==4.11.0.86
 opencv-python-headless==4.11.0.86
+# HEIC photos from iPhones
+pillow-heif==1.8.1
 gspread==6.2.1
 google-auth==2.50.0
 requests==2.33.1

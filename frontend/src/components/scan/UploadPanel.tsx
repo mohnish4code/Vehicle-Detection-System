@@ -43,7 +43,7 @@ export function UploadPanel({ onFiles, disabled, compact }: Props) {
         </p>
         {!compact && (
           <p className="mt-1 text-sm text-slate-500">
-            Take a photo or upload up to {MAX_FILES} images (JPEG, PNG, WebP, max {MAX_FILE_MB} MB each).
+            Take a photo or upload up to {MAX_FILES} images (JPEG, PNG, WebP or iPhone HEIC, max {MAX_FILE_MB} MB each).
           </p>
         )}
 

@@ -2,7 +2,7 @@
 // The backend enforces them anyway.
 export const MAX_FILES = 10;
 export const MAX_FILE_MB = 10;
-export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp"];
+export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/heic", "image/heif"];
 
 export interface Rejected {
   name: string;
@@ -15,11 +15,7 @@ export function checkFiles(files: File[]): { accepted: File[]; rejected: Rejecte
 
   for (const file of files) {
     if (file.type && !ACCEPTED_TYPES.includes(file.type)) {
-      const heic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
-      rejected.push({
-        name: file.name,
-        reason: heic ? "HEIC isn't supported, use JPEG or PNG" : "not a JPEG, PNG, WebP or BMP image",
-      });
+      rejected.push({ name: file.name, reason: "not a JPEG, PNG, WebP, BMP or HEIC image" });
     } else if (file.size > MAX_FILE_MB * 1024 * 1024) {
       rejected.push({ name: file.name, reason: `larger than ${MAX_FILE_MB} MB` });
     } else if (file.size === 0) {

@@ -9,7 +9,7 @@ import numpy as np
 
 from ..config import Settings
 
-ALLOWED = {"jpeg", "png", "webp", "bmp"}
+ALLOWED = {"jpeg", "png", "webp", "bmp", "heic"}
 
 
 class RejectedUpload(Exception):
@@ -37,6 +37,17 @@ def sniff(data: bytes) -> str | None:
     return None
 
 
+def decode_heic(data: bytes) -> np.ndarray | None:
+    """iPhone photos. The HEIF rotation is applied, so the image is upright like a JPEG would be."""
+    import pillow_heif
+
+    try:
+        heif = pillow_heif.open_heif(data, convert_hdr_to_8bit=True)
+        return cv2.cvtColor(np.asarray(heif.to_pillow().convert("RGB")), cv2.COLOR_RGB2BGR)
+    except (ValueError, RuntimeError):
+        return None
+
+
 def read_limited(upload, max_bytes: int) -> bytes:
     data = upload.file.read(max_bytes + 1)
     if len(data) > max_bytes:
@@ -50,13 +61,10 @@ def decode_image(data: bytes, settings: Settings) -> np.ndarray:
         raise RejectedUpload("bad_image", "The file is empty.")
 
     kind = sniff(data)
-    if kind == "heic":
-        raise RejectedUpload("unsupported_type", "HEIC photos aren't supported. Upload a JPEG or PNG, or set "
-                                                 "the iPhone camera format to 'Most Compatible'.")
     if kind not in ALLOWED:
-        raise RejectedUpload("unsupported_type", "Unsupported file type. Upload a JPEG, PNG, WebP or BMP image.")
+        raise RejectedUpload("unsupported_type", "Unsupported file type. Upload a JPEG, PNG, WebP, BMP or HEIC image.")
 
-    image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+    image = decode_heic(data) if kind == "heic" else cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
     if image is None or image.size == 0:
         raise RejectedUpload("bad_image", "This image is damaged or incomplete and couldn't be opened.")
 

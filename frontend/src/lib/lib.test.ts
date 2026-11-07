@@ -66,10 +66,9 @@ describe("checkFiles", () => {
       file("d.png", "image/png", 11 * 1024 * 1024),
       file("e.png", "image/png", 0),
     ]);
-    expect(accepted.map((f) => f.name)).toEqual(["a.jpg"]);
+    expect(accepted.map((f) => f.name)).toEqual(["a.jpg", "b.heic"]);
     expect(rejected.map((r) => r.reason)).toEqual([
-      "HEIC isn't supported, use JPEG or PNG",
-      "not a JPEG, PNG, WebP or BMP image",
+      "not a JPEG, PNG, WebP, BMP or HEIC image",
       "larger than 10 MB",
       "file is empty",
     ]);

@@ -1,5 +1,6 @@
 import threading
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
@@ -108,7 +109,7 @@ def test_detect_bad_files_do_not_fail_batch(client):
     assert results["notes.jpg"]["status"] == "unsupported_type"
     assert results["empty.png"]["message"] == "The file is empty."
     assert results["anim.gif"]["status"] == "unsupported_type"
-    assert "HEIC" in results["IMG_0001.HEIC"]["message"]
+    assert results["IMG_0001.HEIC"]["status"] == "bad_image"  # HEIC header, but no picture in it
     assert "too small" in results["tiny.png"]["message"]
     assert results["car.jpg"]["status"] == "ok"
 
@@ -310,3 +311,31 @@ def test_pool_reports_first_error():
     pool = PipelinePool([FakePipeline(), FakePipeline(loaded=False, error="boom")])
     assert not pool.loaded
     assert pool.error == "boom"
+
+
+def heic_bytes(size=(120, 200)) -> bytes:
+    import io
+
+    import pillow_heif
+
+    h, w = size
+    img = np.zeros((h, w, 3), np.uint8)
+    img[:, : w // 2] = (255, 0, 0)  # left half red
+    heif = pillow_heif.from_bytes(mode="RGB", size=(w, h), data=img.tobytes())
+    buf = io.BytesIO()
+    heif.save(buf, quality=90)
+    return buf.getvalue()
+
+
+def test_heic_photo_is_decoded(client, pipeline):
+    files = [("files", ("IMG_0002.HEIC", heic_bytes(), "image/heic"))]
+    result = client.post("/api/detect", files=files).json()["results"][0]
+    assert result["status"] == "ok"
+    assert (result["width"], result["height"]) == (200, 120)
+
+
+def test_heic_colours_come_out_as_bgr():
+    from app.api.uploads import decode_heic
+
+    img = decode_heic(heic_bytes())
+    assert img[0, 0, 2] > 200 and img[0, 0, 0] < 50  # red is the last channel in OpenCV's BGR
