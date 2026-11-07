@@ -103,14 +103,35 @@ describe("api client", () => {
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))));
     const err = await api.health().catch((e) => e);
     expect(err.code).toBe("NETWORK");
-    expect(err.message).toMatch(/Can't reach the server/);
+    expect(err.message).toMatch(/Can't reach the backend/);
   });
 
-  it("handles non-JSON error pages", async () => {
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("<html>Bad gateway</html>", { status: 502 })));
+  it("treats an empty proxy error as the backend being down", async () => {
+    // what the Vite dev proxy answers when nothing listens on port 8000
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 500 })));
     const err = await api.health().catch((e) => e);
-    expect(err.code).toBe("HTTP_502");
-    expect(err.message).not.toMatch(/html/i);
+    expect(err.code).toBe("BACKEND_DOWN");
+    expect(err.message).toMatch(/Can't reach the backend/);
+  });
+
+  it("notices when a web page answers instead of the API", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("<!doctype html><html></html>", { headers: { "content-type": "text/html" } })),
+    );
+    const err = await api.health().catch((e) => e);
+    expect(err.code).toBe("NOT_THE_API");
+    expect(err.message).not.toMatch(/<html/i);
+  });
+
+  it("keeps the server's own message for real API errors", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ error: { code: "INTERNAL_ERROR", message: "Server hiccup." } }, { status: 500 })),
+    );
+    const err = await api.health().catch((e) => e);
+    expect(err.code).toBe("INTERNAL_ERROR");
+    expect(err.message).toBe("Server hiccup.");
   });
 
   it("sends filters as query params", async () => {

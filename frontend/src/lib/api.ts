@@ -82,11 +82,17 @@ export class ApiError extends Error {
 
 const BASE = import.meta.env.VITE_API_URL ?? "";
 
+/** Codes for "the API isn't there at all", as opposed to an error the API reported */
+export const OFFLINE_CODES = new Set(["NETWORK", "BACKEND_DOWN", "NOT_THE_API"]);
+
+export const BACKEND_DOWN_MESSAGE =
+  "Can't reach the backend. Start it in a terminal, then this page reconnects by itself.";
+
 function statusMessage(status: number): string {
   if (status === 413) return "Upload is too big. Try fewer or smaller images.";
   if (status === 502 || status === 503 || status === 504)
     return "The server is unavailable right now. Try again in a moment.";
-  return "Something went wrong. Please try again.";
+  return "Something went wrong on the server. Please try again.";
 }
 
 export function isAbort(e: unknown): boolean {
@@ -99,18 +105,32 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     res = await fetch(BASE + path, init);
   } catch (e) {
     if (isAbort(e)) throw e;
-    throw new ApiError("NETWORK", 0, "Can't reach the server. Check that the backend is running and try again.");
+    throw new ApiError("NETWORK", 0, BACKEND_DOWN_MESSAGE);
+  }
+
+  const type = res.headers.get("content-type") ?? "";
+  if (type.includes("text/html")) {
+    // A web page instead of the API: some other server is answering on this address
+    throw new ApiError(
+      "NOT_THE_API",
+      res.status,
+      "This address isn't connected to the backend API. Open the URL that `npm run dev` prints, and make sure no other dev server is running.",
+    );
   }
 
   let body: unknown = null;
   try {
     body = await res.json();
   } catch {
-    // not JSON (e.g. a proxy error page), handled below
+    // not JSON, handled below
   }
 
   if (!res.ok) {
     const err = (body as { error?: { code?: string; message?: string } } | null)?.error;
+    if (!err && (res.status === 500 || res.status === 502 || res.status === 504)) {
+      // The dev proxy / nginx answers like this when the backend isn't running
+      throw new ApiError("BACKEND_DOWN", res.status, BACKEND_DOWN_MESSAGE);
+    }
     throw new ApiError(err?.code ?? `HTTP_${res.status}`, res.status, err?.message ?? statusMessage(res.status));
   }
   if (body === null) {
