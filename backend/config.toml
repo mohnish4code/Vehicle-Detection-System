@@ -4,6 +4,9 @@
 [model]
 weights = "models/best.pt"
 confidence = 0.25
+# Copies of the detector + OCR kept in memory; that many images are read at the same
+# time (also the images of one request). Each copy adds a few hundred MB of RAM.
+instances = 1
 
 [ocr]
 languages = ["en"]

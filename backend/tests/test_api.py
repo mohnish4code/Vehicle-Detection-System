@@ -1,7 +1,10 @@
+import threading
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.api.main import create_app
+from app.pipeline import PipelinePool
 from app.sheets import HEADER, SheetsLog
 
 from .conftest import FakePipeline, api_error, image_bytes, make_plate
@@ -277,3 +280,33 @@ def test_list_logs_with_search(client):
 
 def test_unknown_route(client):
     assert_error(client.get("/api/nope"), 404, "NOT_FOUND")
+
+
+# -- several pipeline instances --
+
+class BlockingPipeline(FakePipeline):
+    """detect() waits until `parties` calls are inside it at once, so it only passes if they run in parallel."""
+
+    def __init__(self, barrier):
+        super().__init__()
+        self.barrier = barrier
+
+    def detect(self, image):
+        self.barrier.wait(timeout=5)
+        return super().detect(image)
+
+
+def test_images_of_one_request_run_on_all_pipelines(settings, sheets):
+    barrier = threading.Barrier(2)
+    pool = PipelinePool([BlockingPipeline(barrier), BlockingPipeline(barrier)])
+    with TestClient(create_app(settings, pool, sheets)) as c:
+        res = c.post("/api/detect", files=upload("a.jpg", "b.jpg"))
+    assert res.status_code == 200
+    assert [r["status"] for r in res.json()["results"]] == ["ok", "ok"]
+    assert [p.calls for p in pool.pipelines] == [1, 1]
+
+
+def test_pool_reports_first_error():
+    pool = PipelinePool([FakePipeline(), FakePipeline(loaded=False, error="boom")])
+    assert not pool.loaded
+    assert pool.error == "boom"

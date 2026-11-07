@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 class ModelSettings:
     weights: str = "models/best.pt"
     confidence: float = 0.25
+    # Copies of the detector + OCR to load; that many images are processed at the same time
+    instances: int = 1
 
 
 @dataclass

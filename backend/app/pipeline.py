@@ -1,6 +1,7 @@
 """Plate detection + OCR pipeline shared by the CLI and the web app."""
 
 import logging
+import queue
 import threading
 import time
 from collections import Counter
@@ -423,3 +424,32 @@ class PlatePipeline:
             ))
 
         return plates
+
+
+class PipelinePool:
+    """Several loaded pipelines, so that many images can be processed at the same time.
+
+    Has the same interface as PlatePipeline for the API (loaded, error, detect).
+    Each call borrows a free pipeline and blocks while all of them are busy.
+    """
+
+    def __init__(self, pipelines: list[PlatePipeline]):
+        self.pipelines = pipelines
+        self._free = queue.Queue()
+        for p in pipelines:
+            self._free.put(p)
+
+    @property
+    def loaded(self) -> bool:
+        return all(p.loaded for p in self.pipelines)
+
+    @property
+    def error(self) -> str | None:
+        return next((p.error for p in self.pipelines if p.error), None)
+
+    def detect(self, image: np.ndarray) -> list[PlateResult]:
+        pipe = self._free.get()
+        try:
+            return pipe.detect(image)
+        finally:
+            self._free.put(pipe)

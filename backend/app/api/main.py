@@ -6,6 +6,7 @@
 import base64
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
 import cv2
@@ -15,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ..config import Settings, get_settings, setup_logging
 from ..errors import AppError
-from ..pipeline import PlatePipeline, PlateResult
+from ..pipeline import PipelinePool, PlatePipeline, PlateResult
 from ..plates import plate_format
 from ..sheets import SheetsLog
 from . import schemas
@@ -37,17 +38,22 @@ class ModelUnavailable(AppError):
     code = "MODEL_UNAVAILABLE"
 
 
-def load_pipeline(settings: Settings) -> PlatePipeline:
-    pipeline = PlatePipeline(settings)
-    try:
-        pipeline.load()
-    except FileNotFoundError as e:
-        log.error("%s", e)
-        pipeline.error = f"Model file not found ({settings.model.weights}). Train it or copy best.pt into models/."
-    except Exception:
-        log.exception("Failed to load the detection model")
-        pipeline.error = "The detection model failed to load. Check the server logs."
-    return pipeline
+def load_pipeline(settings: Settings) -> PlatePipeline | PipelinePool:
+    pipelines = []
+    for _ in range(max(1, settings.model.instances)):
+        pipeline = PlatePipeline(settings)
+        pipelines.append(pipeline)
+        try:
+            pipeline.load()
+        except FileNotFoundError as e:
+            log.error("%s", e)
+            pipeline.error = f"Model file not found ({settings.model.weights}). Train it or copy best.pt into models/."
+            break
+        except Exception:
+            log.exception("Failed to load the detection model")
+            pipeline.error = "The detection model failed to load. Check the server logs."
+            break
+    return pipelines[0] if len(pipelines) == 1 else PipelinePool(pipelines)
 
 
 def create_app(settings: Settings | None = None, pipeline: PlatePipeline | None = None,
@@ -112,7 +118,13 @@ def create_app(settings: Settings | None = None, pipeline: PlatePipeline | None 
                            code="TOO_MANY_FILES", status=400)
 
         start = time.perf_counter()
-        results = [process_image(pipe, f, settings, max_file_bytes) for f in files]
+        # With several pipeline instances the images of one request are read in parallel too
+        workers = min(len(files), len(getattr(pipe, "pipelines", [pipe])))
+        if workers > 1:
+            with ThreadPoolExecutor(workers) as executor:
+                results = list(executor.map(lambda f: process_image(pipe, f, settings, max_file_bytes), files))
+        else:
+            results = [process_image(pipe, f, settings, max_file_bytes) for f in files]
         return schemas.DetectResponse(results=results, total_ms=_ms_since(start))
 
     @app.post("/api/logs", response_model=schemas.LogEntry, status_code=status.HTTP_201_CREATED)
