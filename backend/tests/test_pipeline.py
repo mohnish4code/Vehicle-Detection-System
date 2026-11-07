@@ -1,7 +1,9 @@
 import numpy as np
 
+import pytest
+
 from app.config import Settings
-from app.pipeline import PlatePipeline
+from app.pipeline import PlatePipeline, ocr_scale, preprocess_variants
 
 
 class FakeReader:
@@ -16,7 +18,9 @@ class FakeReader:
 
 
 def pipeline_with(reads):
-    pipe = PlatePipeline(Settings())
+    settings = Settings()
+    settings.ocr.decoder = "classic"  # FakeReader only mimics readtext()
+    pipe = PlatePipeline(settings)
     pipe.reader = FakeReader(reads)
     return pipe
 
@@ -49,3 +53,28 @@ def test_early_stop_can_be_disabled():
     pipe.settings.ocr.early_stop_confidence = 1.1
     pipe.read_text(CROP)
     assert pipe.reader.calls == 4
+
+
+@pytest.mark.parametrize("height, expected", [(25, 4.0), (100, 1.0), (400, 0.25), (5, 8.0)])
+def test_crops_scaled_to_target_height(height, expected):
+    crop = np.zeros((height, height * 4, 3), np.uint8)
+    assert ocr_scale(crop, 100, 2) == expected
+
+
+def test_fixed_upscale_when_no_target():
+    assert ocr_scale(np.zeros((25, 100, 3), np.uint8), 0, 2) == 2
+
+
+def test_variants_have_the_scaled_size():
+    variants = preprocess_variants(np.full((25, 100, 3), 128, np.uint8), 4)
+    assert len(variants) == 4
+    assert all(v.shape == (100, 400) for v in variants)
+
+
+def test_crop_padding_scales_with_plate():
+    settings = Settings()
+    settings.ocr.crop_padding = 4
+    pipe = PlatePipeline(settings)
+    image = np.zeros((500, 500, 3), np.uint8)
+    # small far-away plate: margin stays small instead of a fixed 25px
+    assert pipe.crop_plate(image, (100, 100, 160, 115)).shape[:2] == (23, 78)

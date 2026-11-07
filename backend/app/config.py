@@ -23,12 +23,16 @@ class ModelSettings:
 class OcrSettings:
     languages: list[str] = field(default_factory=lambda: ["en"])
     gpu: bool = False
-    crop_padding: int = 25
+    crop_padding: int = 4
     crop_padding_ratio: float = 0.15
-    upscale: int = 2
+    upscale: float = 2
+    target_height: int = 140
     min_confidence: float = 0.5
     max_fixes: int = 2
     early_stop_confidence: float = 0.9
+    # "constrained": decode straight from character probabilities, only allowing valid plates
+    # "classic": take EasyOCR's text and fix known look-alike characters afterwards
+    decoder: str = "constrained"
     ignore_words: list[str] = field(default_factory=lambda: ["IND", "INDIA"])
 
 
