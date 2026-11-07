@@ -119,6 +119,7 @@ def main():
     if args.limit:
         rows = rows[:args.limit]
 
+    machine = machine_info()  # before running, so the commit is the one that was loaded
     pipe = PlatePipeline()
     for item in args.set:
         key, value = item.split("=", 1)
@@ -188,7 +189,7 @@ def main():
         report = {
             "labels": Path(args.labels).name, "split": args.split or "all", "mode": args.mode,
             "settings": asdict(pipe.settings.ocr), "detector_confidence": pipe.settings.model.confidence,
-            "machine": machine_info(), "total_seconds": round(total_secs, 1),
+            "machine": machine, "total_seconds": round(total_secs, 1),
             "summary": s, "by_category": by_category, "by_source": by_source, "results": results,
         }
         Path(args.report).parent.mkdir(parents=True, exist_ok=True)
